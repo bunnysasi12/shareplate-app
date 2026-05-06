@@ -1429,70 +1429,64 @@ const AdminDashboard = ({ users, donations }) => {
 export default function App() {
   const [user, setUser] = useState(null);
   const [view, setView] = useState('landing'); 
-  const [donations, setDonations] = useState([]); // Default to empty array until backend fetches data
+  const [donations, setDonations] = useState([]); 
   const [users, setUsers] = useState(INITIAL_USERS.map((u, index) => ({
     ...u,
     joinedAt: new Date(Date.now() - index * 86400000 * 2).toISOString() 
   })));
 
-  // NEW: Fetch data from Python when the app loads!
+  // Put your actual AWS IP Address here! (e.g., 'http://54.12.34.56:5000')
+  const SERVER_URL = 'http://3.106.48.8:5000';
+
   useEffect(() => {
-    // Prevent fetching in cloud environment preview
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
-    if (isLocal) {
-      // NOTE: When deploying to AWS, you will change this URL to your actual AWS IP Address 
-      // e.g. fetch('http://54.123.45.67:5000/api/donations')
-      fetch('http://localhost:5000/api/donations')
-        .then(response => response.json())
-        .then(data => {
-            // If backend connects, use the Python data
-            setDonations(data);
-        })
-        .catch(error => {
-            console.log("No local backend detected. Falling back to mock data.");
-            // Fallback to local INITIAL_DONATIONS if the Python server is turned off
-            setDonations(INITIAL_DONATIONS);
-        });
-    } else {
-       // We are in the Canvas/Cloud preview environment, do not attempt to fetch from localhost
-       setDonations(INITIAL_DONATIONS);
-    }
+    // 1. Fetch Global Donations
+    fetch(`${SERVER_URL}/api/donations`)
+      .then(response => response.json())
+      .then(data => setDonations(data.length > 0 ? data : INITIAL_DONATIONS))
+      .catch(() => setDonations(INITIAL_DONATIONS));
+
+    // 2. Fetch Global Users
+    fetch(`${SERVER_URL}/api/users`)
+      .then(response => response.json())
+      .then(data => {
+         if (data.length > 0) {
+             setUsers(prev => [...prev, ...data]); // Combine local and cloud users
+         }
+      })
+      .catch(err => console.log("Backend offline, using local users."));
   }, []);
 
   const handleLogin = (u) => { setUser(u); setView('dashboard'); };
-  const handleRegister = (u) => { setUsers([...users, u]); };
   
-  // Send data to Python when a Donor uploads food
+  // Send NEW Users to the Cloud Server
+  const handleRegister = (u) => { 
+    fetch(`${SERVER_URL}/api/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(u)
+    })
+    .then(response => response.json())
+    .then(savedUser => {
+      setUsers([...users, savedUser]); // Save successful cloud user
+    })
+    .catch(error => {
+      setUsers([...users, u]); // Fallback if cloud fails
+    });
+  };
+  
+  // Send NEW Donations to the Cloud Server
   const handleUpload = (items) => { 
     const arr = Array.isArray(items) ? items : [items]; 
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
-    if (isLocal) {
-      arr.forEach(item => {
-        // NOTE: When deploying to AWS, you will change this URL to your actual AWS IP Address
-        // e.g. fetch('http://54.123.45.67:5000/api/donations', { ... })
-        fetch('http://localhost:5000/api/donations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(item)
-        })
-        .then(response => response.json())
-        .then(savedItem => {
-          setDonations(prev => [savedItem, ...prev]);
-        })
-        .catch(error => {
-          console.log("No local backend detected. Saving locally.");
-          // Fallback: save locally if python is not running
-          setDonations(prev => [{...item, id: Date.now()}, ...prev]);
-        });
-      });
-    } else {
-      // Fallback for Canvas/Cloud preview environment
-      const newItems = arr.map((item, idx) => ({...item, id: Date.now() + idx}));
-      setDonations(prev => [...newItems, ...prev]);
-    }
-
+    arr.forEach(item => {
+      fetch(`${SERVER_URL}/api/donations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item)
+      })
+      .then(response => response.json())
+      .then(savedItem => setDonations(prev => [savedItem, ...prev]))
+      .catch(() => setDonations(prev => [{...item, id: Date.now()}, ...prev]));
+    });
     setView('dashboard'); 
   };
 
