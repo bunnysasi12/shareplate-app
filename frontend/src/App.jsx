@@ -664,6 +664,8 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
     if (foundUser) onLogin(foundUser); else setLoginError("Invalid credentials.");
   };
 
+  const SERVER_URL = 'http://3.106.48.8:5000'; // Make sure this is your AWS IP!
+
   const handleRegisterFlow = (e) => {
     e.preventDefault();
     if (!otpSent) {
@@ -671,13 +673,39 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
       if (role === USER_ROLES.RECEIVER && formData.isNgo && (!formData.ngoName || formData.capacityChildren === '' || formData.capacityAdults === '')) return alert("Please fill out the NGO details");
 
       setIsVerifying(true); 
-      setTimeout(() => { 
-        setGeneratedOtp(Math.floor(1000 + Math.random() * 9000).toString()); 
-        setOtpSent(true); 
+      
+      // 1. Ask Python to send the real email
+      fetch(`${SERVER_URL}/api/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error);
+          setIsVerifying(false);
+          return;
+        }
+        setOtpSent(true); // Switch screen to OTP input
         setIsVerifying(false); 
-      }, 1500);
+      });
+
     } else {
-      if (enteredOtp === generatedOtp) {
+      // 2. Ask Python if the user typed the right code
+      fetch(`${SERVER_URL}/api/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, otp: enteredOtp })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert("Incorrect OTP code. Please try again.");
+          return;
+        }
+        
+        // Success! Code was right, create the account
         const newUser = { 
           id: Date.now(), 
           ...formData, 
@@ -692,10 +720,10 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
           verified: true 
         };
         onRegister(newUser);
-        setRegSuccess("Success! Login now."); 
+        setRegSuccess("Email Verified! Login now."); 
         setOtpSent(false); 
         setActiveTab('login');
-      } else alert("Incorrect OTP");
+      });
     }
   };
 
@@ -733,10 +761,6 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
       {otpSent ? (
          <div className="animate-fadeIn space-y-5">
            <button onClick={() => setOtpSent(false)} className="text-sm text-gray-500 flex items-center gap-1 hover:text-gray-800"><ArrowLeft size={16}/> Back</button>
-           <div className="bg-yellow-50 p-4 rounded-xl text-center border border-yellow-200">
-             <p className="text-xs font-bold text-yellow-800 uppercase tracking-wide mb-1">Demo Mode</p>
-             <p className="text-2xl font-mono font-bold text-yellow-900 tracking-widest">{generatedOtp}</p>
-           </div>
            <input type="text" className="w-full border-2 border-gray-200 p-3 rounded-xl text-center text-2xl tracking-widest font-mono focus:border-orange-500 focus:outline-none" placeholder="0000" maxLength={4} value={enteredOtp} onChange={e => setEnteredOtp(e.target.value)} />
            {activeTab === 'forgot' && <input type="password" className="w-full border p-3 rounded-xl focus:border-orange-500 outline-none" placeholder="New Password" value={newResetPassword} onChange={e => setNewResetPassword(e.target.value)} />}
            <button onClick={activeTab === 'forgot' ? handleForgotFlow : handleRegisterFlow} className="w-full bg-orange-600 text-white py-3.5 rounded-xl font-bold hover:bg-orange-700 shadow-lg hover:shadow-orange-500/30 transition-all transform hover:-translate-y-0.5">Verify & Continue</button>
