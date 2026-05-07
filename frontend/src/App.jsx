@@ -5,7 +5,7 @@ import {
   FileText, Globe, Info, Heart, Truck, Zap, BarChart3, ChevronRight, 
   Smartphone, Mail, Lock, ArrowLeft, RefreshCw, Check, KeyRound, Video, 
   X, StopCircle, PlayCircle, Plus, Trash2, List, UtensilsCrossed, Bike, ArrowRight,
-  Lightbulb, Database, ClipboardList
+  Lightbulb, Database, ClipboardList, Droplets, Leaf
 } from 'lucide-react';
 
 // --- GLOBAL STYLES FOR ANIMATIONS ---
@@ -173,6 +173,17 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2); 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
   return (R * c).toFixed(1);
+};
+
+// Calculate Password Strength Helper
+const calculatePasswordStrength = (password) => {
+  let strength = 0;
+  if (password.length > 5) strength += 1;
+  if (password.length > 8) strength += 1;
+  if (/[A-Z]/.test(password)) strength += 1;
+  if (/[0-9]/.test(password)) strength += 1;
+  if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+  return Math.min(strength, 4); // Max 4 levels
 };
 
 // --- COMPONENTS ---
@@ -623,17 +634,19 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
   const [regSuccess, setRegSuccess] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [enteredOtp, setEnteredOtp] = useState('');
-  const [generatedOtp, setGeneratedOtp] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [resetIdentifier, setResetIdentifier] = useState('');
   const [newResetPassword, setNewResetPassword] = useState('');
-
+  
+  // NEW: OTP Resend Timer State
+  const [resendTimer, setResendTimer] = useState(0);
   const [userLocation, setUserLocation] = useState(null);
   const [locStatus, setLocStatus] = useState('idle'); 
 
+  // Reset forms and states when switching tabs
   useEffect(() => { 
     setOtpSent(false); setEnteredOtp(''); setLoginError(''); setRegSuccess(''); 
-    setResetIdentifier(''); setNewResetPassword(''); 
+    setResetIdentifier(''); setNewResetPassword(''); setResendTimer(0);
     setFormData({ email: '', name: '', password: '', phone: '', isNgo: false, ngoName: '', capacityChildren: '', capacityAdults: '' }); 
 
     if (activeTab === 'register') {
@@ -645,7 +658,6 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
             setLocStatus('success');
           },
           (err) => {
-            console.log("GPS error", err);
             setLocStatus('error');
             setUserLocation({ lat: 31.255, lng: 75.705 }); 
           },
@@ -658,13 +670,48 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
     }
   }, [activeTab]);
 
+  // NEW: Resend Timer Countdown Effect
+  useEffect(() => {
+    let interval;
+    if (resendTimer > 0) {
+      interval = setInterval(() => setResendTimer((prev) => prev - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
+  const SERVER_URL = 'http://3.106.48.8:5000'; // AWS IP
+
   const handleLoginSubmit = (e) => {
     e.preventDefault(); setLoginError('');
     const foundUser = availableUsers.find(u => (u.email === formData.email || u.phone === formData.email) && u.password === formData.password);
     if (foundUser) onLogin(foundUser); else setLoginError("Invalid credentials.");
   };
 
-  const SERVER_URL = 'http://3.106.48.8:5000'; // Make sure this is your AWS IP!
+  // NEW: Function to handle Resending OTP from backend
+  const handleResendOtp = () => {
+    if (resendTimer > 0) return;
+    setResendTimer(30);
+    const targetEmail = activeTab === 'forgot' ? resetIdentifier : formData.email;
+    
+    fetch(`${SERVER_URL}/api/send-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: targetEmail })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        alert(data.error);
+        setResendTimer(0);
+      } else {
+        alert("A new verification code has been sent!");
+      }
+    })
+    .catch(() => {
+      alert("Network error. Could not resend OTP.");
+      setResendTimer(0);
+    });
+  };
 
   const handleRegisterFlow = (e) => {
     e.preventDefault();
@@ -674,7 +721,7 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
 
       setIsVerifying(true); 
       
-      // 1. Ask Python to send the real email
+      // Request Python to send the real email
       fetch(`${SERVER_URL}/api/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -687,12 +734,17 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
           setIsVerifying(false);
           return;
         }
-        setOtpSent(true); // Switch screen to OTP input
+        setOtpSent(true); 
+        setResendTimer(30); // Start cooldown timer automatically
         setIsVerifying(false); 
+      })
+      .catch(() => {
+        alert("Error connecting to server to send OTP.");
+        setIsVerifying(false);
       });
 
     } else {
-      // 2. Ask Python if the user typed the right code
+      // Verify the code the user typed against Python backend
       fetch(`${SERVER_URL}/api/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -705,7 +757,7 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
           return;
         }
         
-        // Success! Code was right, create the account
+        // Success! Create the account
         const newUser = { 
           id: Date.now(), 
           ...formData, 
@@ -723,27 +775,59 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
         setRegSuccess("Email Verified! Login now."); 
         setOtpSent(false); 
         setActiveTab('login');
-      });
+      })
+      .catch(() => alert("Error verifying OTP with server."));
     }
   };
 
+  // ENHANCED: Forgot Flow now uses real backend email API instead of fake timeout
   const handleForgotFlow = (e) => {
     e.preventDefault();
     if (!otpSent) {
       if (!availableUsers.find(u => u.email === resetIdentifier || u.phone === resetIdentifier)) return setLoginError("Account not found");
       setIsVerifying(true); 
-      setTimeout(() => { 
-        setGeneratedOtp(Math.floor(1000 + Math.random() * 9000).toString()); 
-        setOtpSent(true); 
+      
+      // Request Python to send the reset code
+      fetch(`${SERVER_URL}/api/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resetIdentifier })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error);
+        } else {
+          setOtpSent(true);
+          setResendTimer(30);
+        }
         setIsVerifying(false); 
-      }, 1500);
+      })
+      .catch(() => {
+        alert("Error connecting to server to send OTP.");
+        setIsVerifying(false);
+      });
     } else {
-      if (enteredOtp === generatedOtp) { 
-        onPasswordReset(resetIdentifier, newResetPassword); 
-        setRegSuccess("Password updated!"); 
-        setActiveTab('login'); 
-      } 
-      else alert("Incorrect OTP");
+      if (!newResetPassword) return alert("Please enter a new password");
+      
+      // Verify OTP with backend
+      fetch(`${SERVER_URL}/api/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resetIdentifier, otp: enteredOtp })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert("Incorrect OTP code. Please try again.");
+        } else {
+          onPasswordReset(resetIdentifier, newResetPassword); 
+          setRegSuccess("Password updated securely!"); 
+          setOtpSent(false);
+          setActiveTab('login'); 
+        }
+      })
+      .catch(() => alert("Error verifying OTP with server."));
     }
   };
 
@@ -761,9 +845,29 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
       {otpSent ? (
          <div className="animate-fadeIn space-y-5">
            <button onClick={() => setOtpSent(false)} className="text-sm text-gray-500 flex items-center gap-1 hover:text-gray-800"><ArrowLeft size={16}/> Back</button>
-           <input type="text" className="w-full border-2 border-gray-200 p-3 rounded-xl text-center text-2xl tracking-widest font-mono focus:border-orange-500 focus:outline-none" placeholder="0000" maxLength={4} value={enteredOtp} onChange={e => setEnteredOtp(e.target.value)} />
-           {activeTab === 'forgot' && <input type="password" className="w-full border p-3 rounded-xl focus:border-orange-500 outline-none" placeholder="New Password" value={newResetPassword} onChange={e => setNewResetPassword(e.target.value)} />}
+           
+           <div className="bg-blue-50 p-4 rounded-xl text-center border border-blue-200">
+             <p className="text-sm text-blue-800 font-medium">We sent a secure code to</p>
+             <p className="text-md font-bold text-blue-900 mt-1">{activeTab === 'forgot' ? resetIdentifier : formData.email}</p>
+           </div>
+           
+           <input type="text" required className="w-full border-2 border-gray-200 p-3 rounded-xl text-center text-2xl tracking-widest font-mono focus:border-orange-500 focus:outline-none" placeholder="0000" maxLength={4} value={enteredOtp} onChange={e => setEnteredOtp(e.target.value)} />
+           
+           {activeTab === 'forgot' && <input type="password" required className="w-full border p-3 rounded-xl focus:border-orange-500 outline-none" placeholder="New Password" value={newResetPassword} onChange={e => setNewResetPassword(e.target.value)} />}
+           
            <button onClick={activeTab === 'forgot' ? handleForgotFlow : handleRegisterFlow} className="w-full bg-orange-600 text-white py-3.5 rounded-xl font-bold hover:bg-orange-700 shadow-lg hover:shadow-orange-500/30 transition-all transform hover:-translate-y-0.5">Verify & Continue</button>
+           
+           {/* NEW: OTP Resend Button with UI Cooldown */}
+           <div className="text-center mt-4 pt-2">
+             <button 
+               type="button" 
+               onClick={handleResendOtp}
+               disabled={resendTimer > 0}
+               className={`text-sm transition-colors font-semibold ${resendTimer > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-orange-600 hover:text-orange-800 underline'}`}
+             >
+               {resendTimer > 0 ? `Resend Code in ${resendTimer}s` : "Didn't receive a code? Resend"}
+             </button>
+           </div>
          </div>
       ) : (
         <form onSubmit={activeTab === 'login' ? handleLoginSubmit : activeTab === 'forgot' ? handleForgotFlow : handleRegisterFlow} className="space-y-4">
@@ -789,7 +893,27 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
               <input type="text" required className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 outline-none" placeholder="Full Name" onChange={e => setFormData({...formData, name: e.target.value})} />
               <input type="tel" required className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 outline-none" placeholder="Phone Number" onChange={e => setFormData({...formData, phone: e.target.value})} />
               <input type="email" required className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 outline-none" placeholder="Email Address" onChange={e => setFormData({...formData, email: e.target.value})} />
-              <input type="password" required className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 outline-none" placeholder="Create Password" onChange={e => setFormData({...formData, password: e.target.value})} />
+              
+              <div>
+                <input type="password" required className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 outline-none" placeholder="Create Password" onChange={e => setFormData({...formData, password: e.target.value})} />
+                {/* NEW: Password Strength Indicator */}
+                {formData.password && (
+                  <div className="mt-2 px-1">
+                    <div className="flex gap-1 h-1.5 w-full rounded-full overflow-hidden bg-gray-100">
+                      {[1, 2, 3, 4].map(level => (
+                        <div key={level} className={`h-full flex-1 transition-all duration-300 ${
+                          calculatePasswordStrength(formData.password) >= level 
+                            ? (calculatePasswordStrength(formData.password) <= 2 ? 'bg-orange-400' : 'bg-green-500') 
+                            : 'bg-transparent'
+                        }`}></div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-1 text-right">
+                      {calculatePasswordStrength(formData.password) <= 2 ? 'Weak - Add numbers & symbols' : 'Strong Password'}
+                    </p>
+                  </div>
+                )}
+              </div>
               
               <label className="block text-xs font-bold text-gray-500 uppercase mt-2">I want to...</label>
               <div className="grid grid-cols-3 gap-2">
@@ -847,14 +971,14 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
           {activeTab === 'forgot' && (
              <div className="space-y-4 animate-slideUp">
                <h3 className="text-center font-bold text-gray-800 text-lg">Reset Password</h3>
-               <p className="text-center text-gray-500 text-sm">Enter your registered email or phone to receive a code.</p>
-               <input type="text" required className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 outline-none" placeholder="Email or Phone" value={resetIdentifier} onChange={e => setResetIdentifier(e.target.value)} />
+               <p className="text-center text-gray-500 text-sm">Enter your registered email to receive a secure reset code.</p>
+               <input type="email" required className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 outline-none" placeholder="Registered Email Address" value={resetIdentifier} onChange={e => setResetIdentifier(e.target.value)} />
                <button type="button" onClick={() => setActiveTab('login')} className="block mx-auto text-sm text-gray-500 hover:text-gray-800">Back to Login</button>
              </div>
           )}
 
-          <button type="submit" className="w-full bg-orange-600 text-white py-3.5 rounded-xl font-bold hover:bg-orange-700 transition-all shadow-lg hover:shadow-orange-500/30 transform hover:-translate-y-0.5 active:translate-y-0 mt-4">
-            {activeTab === 'login' ? 'Sign In' : activeTab === 'forgot' ? 'Send Reset Code' : 'Create Account'}
+          <button disabled={isVerifying} type="submit" className="w-full bg-orange-600 text-white py-3.5 rounded-xl font-bold hover:bg-orange-700 transition-all shadow-lg hover:shadow-orange-500/30 transform hover:-translate-y-0.5 active:translate-y-0 mt-4 disabled:bg-gray-400">
+            {isVerifying ? 'Connecting to Server...' : (activeTab === 'login' ? 'Sign In' : activeTab === 'forgot' ? 'Send Reset Code' : 'Create Account')}
           </button>
         </form>
       )}
@@ -1102,54 +1226,91 @@ const FoodUpload = ({ user, onUploadComplete, onBack }) => {
   );
 };
 
-const DonorDashboard = ({ user, donations, setView }) => (
-  <div className="space-y-8 animate-fadeIn pb-20 max-w-7xl mx-auto px-4 mt-8">
-    <div className="flex justify-between items-end">
+// ENHANCED: Donor Dashboard now features an Environmental Impact Tracker!
+const DonorDashboard = ({ user, donations, setView }) => {
+  const myDonations = donations.filter(d => d.donorId === user.id);
+  const totalKg = myDonations.reduce((acc, curr) => acc + (parseFloat(curr.quantity) || 0), 0);
+  const co2Saved = (totalKg * 2.5).toFixed(1); // Avg 2.5kg CO2 saved per 1kg food waste
+  const waterSaved = (totalKg * 800).toLocaleString(); // Avg 800 Liters water to produce 1kg food
+
+  return (
+    <div className="space-y-8 animate-fadeIn pb-20 max-w-7xl mx-auto px-4 mt-8">
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Hello, {user.name.split(' ')[0]} 👋</h1>
+          <p className="text-gray-500 mt-1">You've successfully verified {myDonations.length} donations!</p>
+        </div>
+        <button onClick={() => setView('upload')} className="bg-orange-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 shadow-lg hover:shadow-orange-500/40 hover:-translate-y-1 transition-all font-bold">
+          <Plus size={20} /> New Donation
+        </button>
+      </div>
+
+      {/* NEW: Environmental Impact Tracker */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-2xl border border-green-200 flex items-center gap-4">
+          <div className="bg-green-500 p-3 rounded-full"><Leaf className="text-white" size={24}/></div>
+          <div>
+            <p className="text-xs font-bold text-green-700 uppercase">CO₂ Prevented</p>
+            <p className="text-2xl font-black text-green-900">{co2Saved} <span className="text-sm font-medium">kg</span></p>
+          </div>
+        </div>
+        <div className="bg-gradient-to-br from-blue-50 to-cyan-100 p-6 rounded-2xl border border-blue-200 flex items-center gap-4">
+          <div className="bg-blue-500 p-3 rounded-full"><Droplets className="text-white" size={24}/></div>
+          <div>
+            <p className="text-xs font-bold text-blue-700 uppercase">Water Saved</p>
+            <p className="text-2xl font-black text-blue-900">{waterSaved} <span className="text-sm font-medium">Liters</span></p>
+          </div>
+        </div>
+        <div className="bg-gradient-to-br from-orange-50 to-yellow-100 p-6 rounded-2xl border border-orange-200 flex items-center gap-4">
+          <div className="bg-orange-500 p-3 rounded-full"><Package className="text-white" size={24}/></div>
+          <div>
+            <p className="text-xs font-bold text-orange-700 uppercase">Food Rescued</p>
+            <p className="text-2xl font-black text-orange-900">{totalKg} <span className="text-sm font-medium">kg</span></p>
+          </div>
+        </div>
+      </div>
+
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Hello, {user.name.split(' ')[0]} 👋</h1>
-        <p className="text-gray-500 mt-1">You've saved 24kg of food this month!</p>
-      </div>
-      <button onClick={() => setView('upload')} className="bg-orange-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 shadow-lg hover:shadow-orange-500/40 hover:-translate-y-1 transition-all font-bold">
-        <Plus size={20} /> New Donation
-      </button>
-    </div>
-
-    <div>
-      <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Clock size={18} className="text-orange-500"/> Recent Activity</h3>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {donations.filter(d => d.donorId === user.id).map(d => (
-          <div key={d.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-            <div className="h-48 bg-gray-100 relative overflow-hidden">
-              {d.mediaType==='video' ? <div className="w-full h-full flex items-center justify-center bg-gray-900"><Video size={32} className="text-white opacity-50" /></div> : <img src={d.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"/>}
-              <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-gray-800 shadow-sm">{d.score} Score</div>
-            </div>
-            <div className="p-5">
-              <div className="flex justify-between items-start mb-2">
-                <h4 className="font-bold text-lg text-gray-900">{d.foodType}</h4>
-                <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${d.claimedBy ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>{d.claimedBy ? 'Accepted' : 'Pending'}</span>
+        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Clock size={18} className="text-orange-500"/> Recent Activity</h3>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {myDonations.map(d => (
+            <div key={d.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+              <div className="h-48 bg-gray-100 relative overflow-hidden">
+                {d.mediaType==='video' ? <div className="w-full h-full flex items-center justify-center bg-gray-900"><Video size={32} className="text-white opacity-50" /></div> : <img src={d.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"/>}
+                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-gray-800 shadow-sm">{d.score} Score</div>
               </div>
-              <p className="text-xs text-gray-500 mb-4">{d.quantity}kg • Serves ~{d.servingsAdults} Adults</p>
-              <div className="text-xs text-gray-400 flex items-center gap-1"><Clock size={12} /> {new Date(d.timestamp).toLocaleDateString()}</div>
+              <div className="p-5">
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="font-bold text-lg text-gray-900">{d.foodType}</h4>
+                  <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${d.claimedBy ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>{d.claimedBy ? 'Accepted' : 'Pending'}</span>
+                </div>
+                <p className="text-xs text-gray-500 mb-4">{d.quantity}kg • Serves ~{d.servingsAdults} Adults</p>
+                <div className="text-xs text-gray-400 flex items-center gap-1"><Clock size={12} /> {new Date(d.timestamp).toLocaleDateString()}</div>
+              </div>
             </div>
-          </div>
-        ))}
-        {donations.filter(d => d.donorId === user.id).length === 0 && (
-          <div className="col-span-full py-16 text-center border-2 border-dashed border-gray-200 rounded-2xl">
-            <p className="text-gray-400">No donations yet. Start making a difference today!</p>
-          </div>
-        )}
+          ))}
+          {myDonations.length === 0 && (
+            <div className="col-span-full py-16 text-center border-2 border-dashed border-gray-200 rounded-2xl">
+              <p className="text-gray-400">No donations yet. Start making a difference today!</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
+// ENHANCED: Added "Verified Partner" badge to NGO profile section
 const ReceiverDashboard = ({ user, donations, onAccept, users }) => {
   const available = donations.filter(d => !d.claimedBy && d.status.includes('Safe'));
   return (
     <div className="space-y-8 animate-fadeIn pb-20 max-w-7xl mx-auto px-4 mt-8">
       <div className="bg-gradient-to-r from-orange-700 to-orange-500 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
         <div className="relative z-10">
-          <h1 className="text-3xl font-bold">{user.name}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold">{user.name}</h1>
+            <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 border border-white/30 shadow-sm"><ShieldCheck size={14}/> Verified Partner</span>
+          </div>
           <p className="opacity-90 mt-2">Daily Capacity: {user.capacity} Meals (Children: {user.capacityChildren || 0}, Adults: {user.capacityAdults || 0})</p>
         </div>
         <Globe className="absolute -right-4 -bottom-4 text-white/10" size={150} />
