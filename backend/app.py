@@ -13,8 +13,8 @@ users_db = []
 otp_storage = {} # NEW: Stores generated OTPs temporarily
 
 # --- YOUR GMAIL CREDENTIALS ---
-GMAIL_ADDRESS = "bunnysasi00@gmail.com" # Put your email here
-GMAIL_APP_PASSWORD = "gpqgqfyqrnaurifc" # Put the Google App Password here (no spaces)
+GMAIL_ADDRESS = "shareplatefooddonation@gmail.com" 
+GMAIL_APP_PASSWORD = "pwhqpoucfzgdflfs" 
 
 @app.route('/', methods=['GET'])
 def home():
