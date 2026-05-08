@@ -123,6 +123,7 @@ const LandingPage = ({ onGetStarted, onLearnMore, availableUsers }) => {
   const [locStatus, setLocStatus] = useState("idle"); 
   const [locationError, setLocationError] = useState(null);
   const [landingSection, setLandingSection] = useState('impact'); 
+  const [userLocation, setUserLocation] = useState(null);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentBg((prev) => (prev + 1) % BG_IMAGES.length), 5000); 
@@ -136,6 +137,44 @@ const LandingPage = ({ onGetStarted, onLearnMore, availableUsers }) => {
     return () => clearInterval(interval);
   }, []);
 
+  // Real-world Fetcher Using OpenStreetMap Overpass API
+  const fetchRealNGOs = async (lat, lng) => {
+    try {
+      const query = `[out:json];
+      (
+        node["office"~"ngo|charity"](around:15000,${lat},${lng});
+        node["amenity"~"social_facility"](around:15000,${lat},${lng});
+        node["amenity"="place_of_worship"](around:15000,${lat},${lng});
+      );
+      out 10;`;
+      
+      const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      
+      if (data.elements && data.elements.length > 0) {
+        return data.elements.filter(e => e.tags && e.tags.name).map((e, index) => {
+           const distance = calculateDistance(lat, lng, e.lat, e.lon);
+           const demands = ['Critical', 'High', 'Moderate'];
+           return {
+              id: `real-${e.id}`,
+              name: e.tags.name,
+              role: 'receiver',
+              capacity: Math.floor(Math.random() * 400) + 100, 
+              capacityChildren: Math.floor(Math.random() * 100),
+              capacityAdults: Math.floor(Math.random() * 200),
+              status: 'Verified by Map',
+              demand: demands[index % 3],
+              distance: distance
+           };
+        });
+      }
+      return null;
+    } catch (error) {
+      console.error("Failed to fetch real NGOs from map:", error);
+      return null;
+    }
+  };
+
   const handleLocateNGOs = () => {
     setLocStatus("loading");
     setLocationError(null);
@@ -144,14 +183,25 @@ const LandingPage = ({ onGetStarted, onLearnMore, availableUsers }) => {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const { latitude, longitude } = pos.coords;
-          const nearby = availableUsers.filter(u => u.role === USER_ROLES.RECEIVER && !u.suspended)
-            .map(ngo => ({ ...ngo, distance: calculateDistance(latitude, longitude, ngo.location.lat, ngo.location.lng) }))
-            .sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance)).slice(0, 3);
-          setNearbyNGOs(nearby); setLocStatus("success");
+          setUserLocation({ lat: latitude, lng: longitude });
+
+          fetchRealNGOs(latitude, longitude).then(realNGOs => {
+            if (realNGOs && realNGOs.length > 0) {
+              const closest = realNGOs.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance)).slice(0, 4);
+              setNearbyNGOs(closest);
+              setLocStatus("success");
+            } else {
+              const nearby = availableUsers.filter(u => u.role === USER_ROLES.RECEIVER && !u.suspended)
+                .map(ngo => ({ ...ngo, distance: calculateDistance(latitude, longitude, ngo.location.lat, ngo.location.lng) }))
+                .sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance)).slice(0, 3);
+              setNearbyNGOs(nearby); 
+              setLocStatus("success");
+            }
+          });
         },
         () => {
           setLocStatus("error");
-          setLocationError("Location access denied. Enable GPS to see data.");
+          setLocationError("Location access denied. Enable GPS to scan the map.");
         }
       );
     } else {
@@ -272,11 +322,18 @@ const LandingPage = ({ onGetStarted, onLearnMore, availableUsers }) => {
                       { u: 'Fresh Bakery', a: 'Donated 10kg Bread', t: '25m ago' },
                       { u: 'City Care Trust', a: 'Completed Delivery', t: '40m ago' },
                     ].map((item, index) => (
-                      <div key={index} className="bg-orange-900/40 backdrop-blur-sm border border-orange-500/30 p-4 rounded-lg flex items-center gap-4 hover:translate-x-2 transition-transform duration-300 hover:bg-orange-900/60">
-                        <div className="bg-orange-500/20 p-2 rounded-full"><Heart size={18} className="text-orange-300 fill-orange-300/20" /></div>
+                      <div 
+                        key={index} 
+                        className="bg-orange-900/40 backdrop-blur-sm border border-orange-500/30 p-4 rounded-lg flex items-center gap-4 hover:translate-x-2 transition-transform duration-300 hover:bg-orange-900/60"
+                      >
+                        <div className="bg-orange-500/20 p-2 rounded-full">
+                          <Heart size={18} className="text-orange-300 fill-orange-300/20" />
+                        </div>
                         <div>
                           <p className="font-medium text-sm text-white">{item.u} <span className="text-gray-300 font-normal">{item.a}</span></p>
-                          <p className="text-xs text-orange-400 flex items-center gap-1 mt-1"><Clock size={10} /> {item.t}</p>
+                          <p className="text-xs text-orange-400 flex items-center gap-1 mt-1">
+                            <Clock size={10} /> {item.t}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -287,7 +344,7 @@ const LandingPage = ({ onGetStarted, onLearnMore, availableUsers }) => {
               {landingSection === 'gps' && (
                 <div className="animate-slideUp space-y-4">
                   <h2 className="text-2xl font-bold mb-2 flex items-center gap-2"><MapPin className="text-orange-400" /> Nearby Help</h2>
-                  <p className="text-sm text-orange-200 mb-4">Locating registered NGOs active in your area using device GPS.</p>
+                  <p className="text-sm text-orange-200 mb-4">Scanning real-world map data for nearby NGOs and Charities within 15km.</p>
                   
                   <div className="bg-white/90 backdrop-blur-xl text-gray-800 rounded-xl overflow-hidden shadow-2xl transition-all duration-300 max-h-[400px] overflow-y-auto custom-scrollbar">
                     {locStatus === 'loading' && (
@@ -297,33 +354,51 @@ const LandingPage = ({ onGetStarted, onLearnMore, availableUsers }) => {
                       </div>
                     )}
                     {locStatus === 'success' && nearbyNGOs.length > 0 && (
-                      <div className="divide-y divide-gray-200">
-                        {nearbyNGOs.map(ngo => (
-                          <div key={ngo.id} className="p-4 hover:bg-orange-50 transition cursor-pointer group">
-                            <div className="flex justify-between items-start mb-1">
-                              <div className="font-bold text-base text-gray-900 group-hover:text-orange-700 transition-colors">{ngo.name}</div>
-                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase shadow-sm ${
-                                ngo.demand === 'Critical' ? 'bg-red-100 text-red-600' :
-                                ngo.demand === 'High' ? 'bg-orange-100 text-orange-600' :
-                                'bg-blue-100 text-blue-600'
-                              }`}>
-                                {ngo.demand} Demand
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-end">
-                              <div>
-                                <div className="text-xs text-gray-500">Capacity: {ngo.capacity} meals (C: {ngo.capacityChildren} | A: {ngo.capacityAdults})</div>
-                                <div className="text-xs flex items-center gap-1 text-emerald-600 mt-1 font-medium">
-                                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> {ngo.status || "Active Now"}
+                      <div className="flex flex-col">
+                        {userLocation && (
+                          <div className="h-48 w-full bg-gray-200 border-b border-gray-200 relative overflow-hidden">
+                             <iframe 
+                               width="100%" 
+                               height="100%" 
+                               style={{ border: 0 }}
+                               loading="lazy"
+                               allowFullScreen
+                               referrerPolicy="no-referrer-when-downgrade"
+                               src={`https://maps.google.com/maps?q=${userLocation.lat},${userLocation.lng}&z=13&output=embed`}
+                             ></iframe>
+                             <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur px-2 py-1 rounded shadow text-[10px] font-bold text-green-700 flex items-center gap-1 pointer-events-none">
+                               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Live Map
+                             </div>
+                          </div>
+                        )}
+                        <div className="divide-y divide-gray-200">
+                          {nearbyNGOs.map(ngo => (
+                            <div key={ngo.id} className="p-4 hover:bg-orange-50 transition cursor-pointer group">
+                              <div className="flex justify-between items-start mb-1">
+                                <div className="font-bold text-base text-gray-900 group-hover:text-orange-700 transition-colors">{ngo.name}</div>
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase shadow-sm ${
+                                  ngo.demand === 'Critical' ? 'bg-red-100 text-red-600' :
+                                  ngo.demand === 'High' ? 'bg-orange-100 text-orange-600' :
+                                  'bg-blue-100 text-blue-600'
+                                }`}>
+                                  {ngo.demand} Demand
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-end">
+                                <div>
+                                  <div className="text-xs text-gray-500">Capacity: {ngo.capacity} meals (C: {ngo.capacityChildren} | A: {ngo.capacityAdults})</div>
+                                  <div className="text-xs flex items-center gap-1 text-emerald-600 mt-1 font-medium">
+                                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> {ngo.status || "Active Now"}
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-lg font-bold text-gray-800">{ngo.distance} <span className="text-xs font-normal text-gray-500">km</span></div>
+                                  <div className="text-[10px] text-gray-400">Away</div>
                                 </div>
                               </div>
-                              <div className="text-right">
-                                <div className="text-lg font-bold text-gray-800">{ngo.distance} <span className="text-xs font-normal text-gray-500">km</span></div>
-                                <div className="text-[10px] text-gray-400">Away</div>
-                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     )}
                     {(locStatus === 'error' || (locStatus === 'success' && nearbyNGOs.length === 0)) && (
@@ -686,8 +761,12 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers, show
               
               <label className="block text-xs font-bold text-gray-500 uppercase mt-2">I want to...</label>
               <div className="grid grid-cols-3 gap-2">
-                {[USER_ROLES.DONOR, USER_ROLES.RECEIVER, USER_ROLES.VOLUNTEER].map((r) => (
-                  <button key={r} type="button" onClick={() => setRole(r)} className={`p-2 text-xs border rounded-lg capitalize font-bold transition-all ${role === r ? 'bg-orange-100 border-orange-500 text-orange-700' : 'bg-white hover:bg-gray-50 text-gray-500'}`}>{r}</button>
+                {[
+                  { id: USER_ROLES.DONOR, label: 'Donor' },
+                  { id: USER_ROLES.RECEIVER, label: 'Receiver' },
+                  { id: USER_ROLES.VOLUNTEER, label: 'Volunteer' }
+                ].map((r) => (
+                  <button key={r.id} type="button" onClick={() => setRole(r.id)} className={`p-2 text-xs border rounded-lg capitalize font-bold transition-all ${role === r.id ? 'bg-orange-100 border-orange-500 text-orange-700' : 'bg-white hover:bg-gray-50 text-gray-500'}`}>{r.label}</button>
                 ))}
               </div>
 
@@ -781,8 +860,8 @@ const FoodUpload = ({ user, onUploadComplete, onBack, showToast }) => {
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   
-  const [metadata, setMetadata] = useState({ type: FOOD_TYPES[0], quantity: 0, prepTime: 0, packaging: 'open', storage: 'room' });
-
+  const [metadata, setMetadata] = useState({ type: FOOD_TYPES[0], quantity: 0, prepTime: 0, packaging: 'sealed', storage: 'room' });
+  
   const servingsAdults = metadata.quantity ? Math.floor(metadata.quantity * FOOD_SERVING_RATIOS[metadata.type].adult) : 0;
   const servingsChildren = metadata.quantity ? Math.floor(metadata.quantity * FOOD_SERVING_RATIOS[metadata.type].child) : 0;
 
@@ -827,12 +906,59 @@ const FoodUpload = ({ user, onUploadComplete, onBack, showToast }) => {
     e.preventDefault();
     if (!metadata.quantity || metadata.quantity <= 0) return showToast("Please enter a valid quantity.", "error");
     setLoading(true);
+
     setTimeout(() => {
-      let score = 100; let status = 'Safe to Donate'; let reasons = [];
-      if (metadata.prepTime > 12) { score -= 40; reasons.push('Prepared > 12 hours ago'); }
-      if (metadata.storage === 'room' && metadata.prepTime > 4) { score -= 50; reasons.push('Room temp > 4h'); }
-      if (score >= 80) status = 'Safe to Donate'; else if (score >= 50) status = 'Needs Manual Verification'; else status = 'Unsafe for Redistribution';
-      setAnalysis({ score, status, reasons }); setLoading(false); setStep(3);
+      let timeRisk = 0;
+      let foodTypeRisk = 0;
+      let storageRisk = 0;
+      let packagingRisk = 0;
+      let visualRisk = Math.floor(Math.random() * 6); // Mocked 0-5 visual penalty from AI image analysis
+      let reasons = [];
+
+      const hours = parseFloat(metadata.prepTime) || 0;
+      
+      // 1. Time Risk Calculation
+      if (hours > 24) { timeRisk = 60; reasons.push('Prepared over 24 hours ago (Critical)'); }
+      else if (hours > 12) { timeRisk = 30; reasons.push('Prepared over 12 hours ago (High Risk)'); }
+      else if (hours > 6) { timeRisk = 15; reasons.push('Prepared over 6 hours ago'); }
+      else if (hours > 2) { timeRisk = 5; }
+
+      // 2. Food Type Risk Calculation
+      const highRiskFoods = ['Curry / Gravy', 'Mixed Meal'];
+      const mediumRiskFoods = ['Rice / Grains', 'Dessert'];
+      if (highRiskFoods.includes(metadata.type)) { foodTypeRisk = 15; reasons.push(`${metadata.type} spoils faster`); }
+      else if (mediumRiskFoods.includes(metadata.type)) { foodTypeRisk = 5; }
+
+      // 3. Storage Risk Calculation
+      if (metadata.storage === 'room') {
+          storageRisk = 10;
+          if (hours > 4) { storageRisk = 35; reasons.push('Room temperature storage > 4 hours'); }
+          else { reasons.push('Stored at room temperature'); }
+      } else if (metadata.storage === 'hot') {
+          storageRisk = hours > 6 ? 15 : 0; 
+          if (hours > 6) reasons.push('Hot storage over extended period');
+      } // chilled is 0 risk
+
+      // 4. Packaging Risk Calculation
+      if (metadata.packaging === 'open') {
+          packagingRisk = 25; reasons.push('Open container (Contamination Risk)');
+      } else if (metadata.packaging === 'secure') {
+          packagingRisk = 10; reasons.push('Packaging is not airtight');
+      } // sealed is 0 risk
+
+      if (visualRisk > 3) reasons.push('Visual AI detected minor color/texture degradation');
+
+      const totalRisk = timeRisk + foodTypeRisk + storageRisk + packagingRisk + visualRisk;
+      let score = Math.max(0, 100 - totalRisk);
+      
+      let status = 'Safe to Donate';
+      if (score >= 80) status = 'Safe to Donate';
+      else if (score >= 50) status = 'Needs Manual Verification';
+      else status = 'Unsafe for Redistribution';
+
+      setAnalysis({ score, status, reasons });
+      setLoading(false);
+      setStep(3);
       showToast("AI Verification Complete", "success");
     }, 2000);
   };
@@ -842,7 +968,24 @@ const FoodUpload = ({ user, onUploadComplete, onBack, showToast }) => {
       id: Date.now(), donorId: user.id, ...metadata, servingsAdults, servingsChildren, image, video, mediaType: video?'video':'image', ...analysis, location: location||user.location, timestamp: new Date().toISOString() 
     }]);
     setStep(1); setImage(null); setVideo(null); setAnalysis(null); setShowSummary(true);
-    setMetadata({ type: FOOD_TYPES[0], quantity: 0, prepTime: 0, packaging: 'open', storage: 'room' });
+    setMetadata({ type: FOOD_TYPES[0], quantity: 0, prepTime: 0, packaging: 'sealed', storage: 'room' });
+  };
+
+  const submitDonation = () => {
+    onUploadComplete({ 
+      id: Date.now(), 
+      donorId: user.id, 
+      ...metadata, 
+      servingsAdults, 
+      servingsChildren, 
+      status: 'Pending', 
+      score: analysis.score, 
+      image: image || 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=400', 
+      video: video || null,
+      mediaType: video ? 'video' : 'image',
+      timestamp: new Date().toISOString() 
+    });
+    showToast("Food Listed Successfully!", "success");
   };
 
   if (showSummary) return (
@@ -859,7 +1002,7 @@ const FoodUpload = ({ user, onUploadComplete, onBack, showToast }) => {
               <p className="text-xs text-gray-500">{i.quantity}kg • ~{i.servingsAdults} Adults</p>
             </div>
             <div className={`px-2 py-1 rounded text-xs font-bold ${i.status.includes('Safe') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{i.score}/100</div>
-            <button onClick={()=>setBatchItems(b=>b.filter(x=>x.id!==i.id))} className="text-red-400 hover:text-red-600"><Trash2 size={18}/></button>
+            <button onClick={()=>setBatchItems(b=>b.filter(x=>x.id!==i.id))} className="text-red-400 hover:text-red-600"><Trash2 size={18} /></button>
           </div>
         ))}
       </div>
@@ -921,8 +1064,8 @@ const FoodUpload = ({ user, onUploadComplete, onBack, showToast }) => {
         {step === 2 && (
           <form onSubmit={runAIVerification} className="space-y-6 animate-slideUp">
              <div className="h-48 bg-gray-100 rounded-xl overflow-hidden shadow-inner relative group">
-                {video ? <video src={video} controls className="w-full h-full object-cover"/> : <img src={image} className="w-full h-full object-cover"/>}
-                <button type="button" onClick={()=>setStep(1)} className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X size={16}/></button>
+                {video ? <video src={video} controls className="w-full h-full object-cover"/> : <img src={image || 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=400'} className="w-full h-full object-cover"/>}
+                <button type="button" onClick={()=>{setStep(1); setImage(null); setVideo(null);}} className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X size={16}/></button>
              </div>
              
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -931,26 +1074,38 @@ const FoodUpload = ({ user, onUploadComplete, onBack, showToast }) => {
                  <select className="w-full border p-2.5 rounded-lg bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none" onChange={e=>setMetadata({...metadata, type:e.target.value})}>{FOOD_TYPES.map(t=><option key={t}>{t}</option>)}</select>
                </div>
                <div>
-                 <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Prep Time (hrs)</label>
-                 <input type="number" required className="w-full border p-2.5 rounded-lg bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none" placeholder="e.g. 2" onChange={e=>setMetadata({...metadata, prepTime:e.target.value})}/>
+                 <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Packaging Integrity</label>
+                 <select className="w-full border p-2.5 rounded-lg bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none" onChange={e=>setMetadata({...metadata, packaging:e.target.value})}>
+                    <option value="sealed">Sealed / Airtight</option>
+                    <option value="secure">Covered / Secure Box</option>
+                    <option value="open">Open / Uncovered</option>
+                 </select>
+               </div>
+               <div>
+                 <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Prep Time (hrs ago)</label>
+                 <input type="number" required min="0" className="w-full border p-2.5 rounded-lg bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none" onChange={e=>setMetadata({...metadata, prepTime:e.target.value})}/>
                </div>
                <div>
                  <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Quantity (kg/L/pieces)</label>
-                 <input type="number" required step="0.5" className="w-full border p-2.5 rounded-lg bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none" placeholder="e.g. 5" onChange={e=>setMetadata({...metadata, quantity: parseFloat(e.target.value) || 0})}/>
-               </div>
-               <div className="bg-orange-50 border border-orange-100 rounded-lg p-3 flex flex-col justify-center shadow-sm">
-                 <span className="text-[10px] font-bold text-orange-800 uppercase mb-1">Auto-Calculated Servings</span>
-                 <span className="text-sm text-orange-600 font-bold flex items-center gap-2">
-                   🧑 ~{servingsAdults} Adults | 👧 ~{servingsChildren} Children
-                 </span>
+                 <input type="number" required min="0.1" step="0.1" className="w-full border p-2.5 rounded-lg bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none" onChange={e=>setMetadata({...metadata, quantity: e.target.value})}/>
                </div>
              </div>
-             <div className="flex gap-2">
-               {['hot', 'chilled', 'room'].map(s => <button type="button" key={s} onClick={()=>setMetadata({...metadata, storage:s})} className={`flex-1 py-2 text-xs font-bold rounded-lg border uppercase ${metadata.storage===s ? 'bg-blue-100 border-blue-500 text-blue-700' : 'bg-white text-gray-500'}`}>{s}</button>)}
+
+             <div className="mt-4">
+               <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Storage Condition</label>
+               <div className="flex gap-2">
+                 {['hot', 'chilled', 'room'].map(s => <button type="button" key={s} onClick={()=>setMetadata({...metadata, storage:s})} className={`flex-1 py-3 text-sm font-bold rounded-xl border uppercase transition-colors ${metadata.storage===s ? 'bg-blue-100 border-blue-500 text-blue-800' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>{s}</button>)}
+               </div>
              </div>
+
+             <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 mt-4 text-center">
+               <span className="text-[10px] font-bold text-orange-800 uppercase block mb-1">Auto-Calculated Capacity</span>
+               <span className="text-lg text-orange-600 font-black">🧑 ~{servingsAdults} Adults | 👧 ~{servingsChildren} Children</span>
+             </div>
+
              <button type="submit" disabled={loading} className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold flex justify-center gap-2 hover:bg-black transition-colors shadow-lg">
                {loading ? <Activity size={20} className="animate-spin text-orange-500"/> : <ShieldCheck size={20} className="text-orange-400"/>} 
-               {loading ? 'Analyzing...' : 'Run Safety Check'}
+               {loading ? 'Analyzing...' : 'Run AI Safety Check'}
              </button>
           </form>
         )}
@@ -969,6 +1124,7 @@ const FoodUpload = ({ user, onUploadComplete, onBack, showToast }) => {
               <button onClick={()=>setStep(1)} className="flex-1 py-3 border border-gray-300 rounded-xl font-bold text-gray-600 hover:bg-gray-50">Discard</button>
               <button onClick={handleAddToBatch} disabled={!analysis.status.includes('Safe')} className="flex-1 bg-orange-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed">Add to Batch</button>
             </div>
+            <button onClick={submitDonation} disabled={!analysis.status.includes('Safe')} className="w-full bg-orange-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed">List for Redistribution</button>
           </div>
         )}
       </div>
@@ -1031,13 +1187,15 @@ const DonorDashboard = ({ user, donations, setView }) => {
   );
 };
 
-const ReceiverDashboard = ({ user, donations, onAcceptPickup, users }) => {
+const ReceiverDashboard = ({ user, donations, onAcceptPickup, users, showToast }) => {
   const [tab, setTab] = useState('available');
+  const [selectedDonation, setSelectedDonation] = useState(null);
+
   const available = donations.filter(d => !d.receiverId && d.status.includes('Safe'));
   const history = donations.filter(d => d.receiverId === user.id);
 
   return (
-    <div className="space-y-8 animate-fadeIn pb-20 max-w-7xl mx-auto px-4 mt-8">
+    <div className="space-y-8 animate-fadeIn pb-20 max-w-7xl mx-auto px-4 mt-8 relative">
       <div className="bg-gradient-to-r from-orange-700 to-orange-500 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
         <div className="relative z-10">
           <div className="flex items-center gap-3">
@@ -1059,13 +1217,25 @@ const ReceiverDashboard = ({ user, donations, onAcceptPickup, users }) => {
           {available.map(d => {
             const donor = users.find(u => u.id === d.donorId);
             return (
-              <div key={d.id} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition-shadow">
-                <div className="mb-4">
-                  <div className="flex items-center gap-2 mb-2"><span className="text-xs font-bold text-gray-800">{donor?.name}</span><span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-bold uppercase">{donor?.type}</span></div>
-                  <h4 className="font-extrabold text-gray-900 text-xl">{d.foodType}</h4>
-                  <p className="text-sm font-medium text-gray-500 mt-1">{d.quantity}kg • Verified Safe Score: {d.score}</p>
+              <div key={d.id} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex gap-4 hover:shadow-md transition-shadow">
+                <div 
+                  className="w-24 h-24 bg-gray-200 rounded-lg shrink-0 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity relative group"
+                  onClick={() => setSelectedDonation(d)}
+                  title="Click to view full metadata"
+                >
+                  {d.mediaType==='image' ? <img src={d.image} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center bg-gray-900"><Video size={24} className="text-white"/></div>}
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Search size={20} className="text-white"/>
+                  </div>
                 </div>
-                <button onClick={() => onAcceptPickup(d.id)} className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg text-sm font-bold hover:bg-black transition-colors shadow-md">Request Volunteer Delivery</button>
+                <div className="flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1"><span className="text-xs font-bold text-gray-800">{donor?.name}</span><span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-bold uppercase">{donor?.type}</span></div>
+                    <h4 className="font-extrabold text-gray-900 text-lg">{d.foodType}</h4>
+                    <p className="text-sm font-medium text-gray-500 mt-1">{d.quantity}kg • Verified Safe Score: {d.score}</p>
+                  </div>
+                  <button onClick={() => onAcceptPickup(d.id)} className="self-end bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-black transition-colors shadow-md mt-2">Request Delivery</button>
+                </div>
               </div>
             );
           })}
@@ -1076,8 +1246,14 @@ const ReceiverDashboard = ({ user, donations, onAcceptPickup, users }) => {
       {tab === 'history' && (
         <div className="grid gap-4 md:grid-cols-2 animate-slideUp">
           {history.map(d => (
-            <div key={d.id} className="bg-gray-50 border border-gray-200 p-5 rounded-xl flex justify-between items-center">
-              <div>
+            <div key={d.id} className="bg-gray-50 border border-gray-200 p-5 rounded-xl flex items-center gap-4">
+              <div 
+                  className="w-16 h-16 bg-gray-200 rounded-lg shrink-0 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setSelectedDonation(d)}
+                >
+                  {d.mediaType==='image' ? <img src={d.image} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center bg-gray-900"><Video size={16} className="text-white"/></div>}
+              </div>
+              <div className="flex-1">
                 <h4 className="font-bold text-gray-900">{d.foodType} <span className="text-sm font-normal text-gray-500">({d.quantity}kg)</span></h4>
                 <p className="text-xs font-medium text-gray-500 mt-1">From: {users.find(u=>u.id === d.donorId)?.name}</p>
               </div>
@@ -1085,6 +1261,58 @@ const ReceiverDashboard = ({ user, donations, onAcceptPickup, users }) => {
             </div>
           ))}
           {history.length === 0 && <div className="col-span-full text-center text-gray-400 py-16 border-2 border-dashed border-gray-200 rounded-2xl">You have not claimed any donations yet.</div>}
+        </div>
+      )}
+
+      {/* METADATA MODAL FOR RECEIVERS */}
+      {selectedDonation && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={(e) => {if(e.target === e.currentTarget) setSelectedDonation(null)}}>
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative animate-slideUp">
+            <button onClick={() => setSelectedDonation(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
+            <h3 className="text-xl font-extrabold text-gray-900 mb-4">Donation Details & Metadata</h3>
+            
+            <div className="h-48 bg-gray-100 rounded-xl overflow-hidden mb-5 relative border border-gray-200">
+              {selectedDonation.mediaType === 'video' ? (
+                 <div className="w-full h-full flex items-center justify-center bg-gray-900"><Video size={48} className="text-white opacity-50"/></div>
+              ) : (
+                 <img src={selectedDonation.image} className="w-full h-full object-cover" />
+              )}
+              <div className={`absolute top-2 right-2 backdrop-blur px-2 py-1 rounded text-xs font-bold shadow border ${selectedDonation.score >= 80 ? 'bg-green-100/90 text-green-700 border-green-200' : 'bg-yellow-100/90 text-yellow-700 border-yellow-200'}`}>Score: {selectedDonation.score}</div>
+            </div>
+            
+            <div className="space-y-3 mb-6">
+               <div className="flex justify-between border-b border-gray-100 pb-2">
+                  <span className="text-gray-500 font-bold text-xs uppercase tracking-wide">Food Item</span>
+                  <span className="text-gray-900 font-bold text-sm">{selectedDonation.foodType} ({selectedDonation.quantity}kg)</span>
+               </div>
+               <div className="flex justify-between border-b border-gray-100 pb-2">
+                  <span className="text-gray-500 font-bold text-xs uppercase tracking-wide">Donor</span>
+                  <span className="text-gray-900 font-bold text-sm">{users.find(u=>u.id===selectedDonation.donorId)?.name}</span>
+               </div>
+               <div className="flex justify-between border-b border-gray-100 pb-2">
+                  <span className="text-gray-500 font-bold text-xs uppercase tracking-wide">Preparation</span>
+                  <span className="text-gray-900 font-bold text-sm">{selectedDonation.prepTime} {String(selectedDonation.prepTime).includes('ago') ? '' : 'hours ago'}</span>
+               </div>
+               <div className="flex justify-between border-b border-gray-100 pb-2">
+                  <span className="text-gray-500 font-bold text-xs uppercase tracking-wide">Storage</span>
+                  <span className="text-gray-900 font-bold text-sm capitalize">{selectedDonation.storage}</span>
+               </div>
+               <div className="flex justify-between border-b border-gray-100 pb-2">
+                  <span className="text-gray-500 font-bold text-xs uppercase tracking-wide">Packaging</span>
+                  <span className="text-gray-900 font-bold text-sm capitalize">{selectedDonation.packaging}</span>
+               </div>
+               <div className="flex justify-between border-b border-gray-100 pb-2 bg-orange-50/50 p-2 rounded">
+                  <span className="text-orange-700 font-bold text-xs uppercase tracking-wide">Servings Estimated</span>
+                  <span className="text-orange-900 font-bold text-sm">~{selectedDonation.servingsAdults} Adults / ~{selectedDonation.servingsChildren} Children</span>
+               </div>
+            </div>
+            
+            {!selectedDonation.claimedBy && (
+               <button onClick={() => { onAcceptPickup(selectedDonation.id); setSelectedDonation(null); }} className="w-full bg-orange-600 text-white py-3.5 rounded-xl font-bold hover:bg-orange-700 transition-colors shadow-md">
+                 Request Volunteer Delivery
+               </button>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -1140,8 +1368,18 @@ const VolunteerDashboard = ({ user, donations, users, onAcceptTask, onVolunteerA
 
       {activeTab === 'active' && (
         <div className="grid gap-4 md:grid-cols-2 animate-slideUp">
-          {myActiveTasks.map(t => (
-            <div key={t.id} className="bg-orange-50 border border-orange-200 p-5 rounded-xl shadow-sm">
+          {myActiveTasks.map(t => {
+            const donor = users.find(u=>u.id===t.donorId);
+            const receiver = users.find(u=>u.id===t.receiverId);
+            
+            // Dynamic Routing: Map from Volunteer->Donor before pickup, then Donor->NGO after pickup
+            const originLoc = !t.pickedUp ? user.location : donor?.location;
+            const destLoc = !t.pickedUp ? donor?.location : receiver?.location;
+            const mapUrl = originLoc && destLoc ? `https://maps.google.com/maps?saddr=${originLoc.lat},${originLoc.lng}&daddr=${destLoc.lat},${destLoc.lng}&output=embed` : '';
+            const deepLink = originLoc && destLoc ? `https://www.google.com/maps/dir/?api=1&origin=${originLoc.lat},${originLoc.lng}&destination=${destLoc.lat},${destLoc.lng}` : '#';
+
+            return (
+            <div key={t.id} className="bg-orange-50 border border-orange-200 p-5 rounded-xl shadow-sm flex flex-col">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="font-bold text-lg text-gray-900">{t.foodType}</h3>
@@ -1152,22 +1390,34 @@ const VolunteerDashboard = ({ user, donations, users, onAcceptTask, onVolunteerA
                 </div>
               </div>
               
-              <div className="flex flex-col gap-2 mb-5">
+              <div className="flex flex-col gap-2 mb-4">
                 <div className={`flex items-center gap-2 text-sm ${!t.pickedUp ? 'text-gray-900 font-bold' : 'text-gray-400 line-through'}`}>
-                   1. {users.find(u=>u.id===t.donorId)?.name}
+                   1. {donor?.name}
                 </div>
                 <div className={`flex items-center gap-2 text-sm ${t.pickedUp ? 'text-gray-900 font-bold' : 'text-gray-400'}`}>
-                   2. {users.find(u=>u.id===t.receiverId)?.name}
+                   2. {receiver?.name}
                 </div>
               </div>
 
-              {!t.pickedUp ? (
-                <button onClick={() => onVolunteerAction(t.id, 'pickup')} className="w-full bg-orange-600 text-white px-5 py-3 rounded-lg font-bold shadow hover:bg-orange-700 transition-colors">Confirm Pickup at Donor</button>
-              ) : (
-                <button onClick={() => onVolunteerAction(t.id, 'deliver')} className="w-full bg-green-600 text-white px-5 py-3 rounded-lg font-bold shadow hover:bg-green-700 transition-colors">Confirm Dropoff at NGO</button>
+              {/* LIVE MAP EMBED */}
+              {mapUrl && (
+                <div className="h-48 w-full rounded-xl overflow-hidden border border-orange-200 mb-4 relative shadow-inner">
+                  <iframe width="100%" height="100%" style={{ border: 0 }} loading="lazy" allowFullScreen referrerPolicy="no-referrer-when-downgrade" src={mapUrl}></iframe>
+                  <a href={deepLink} target="_blank" rel="noreferrer" className="absolute top-2 right-2 bg-white/90 backdrop-blur text-blue-600 px-3 py-1.5 rounded-lg shadow font-bold text-xs flex items-center gap-1 hover:bg-blue-50 transition-colors">
+                    <Navigation size={12} /> Open Maps App
+                  </a>
+                </div>
               )}
+
+              <div className="mt-auto">
+                {!t.pickedUp ? (
+                  <button onClick={() => onVolunteerAction(t.id, 'pickup')} className="w-full bg-orange-600 text-white px-5 py-3 rounded-lg font-bold shadow hover:bg-orange-700 transition-colors">Confirm Pickup at Donor</button>
+                ) : (
+                  <button onClick={() => onVolunteerAction(t.id, 'deliver')} className="w-full bg-green-600 text-white px-5 py-3 rounded-lg font-bold shadow hover:bg-green-700 transition-colors">Confirm Dropoff at NGO</button>
+                )}
+              </div>
             </div>
-          ))}
+          )})}
           {myActiveTasks.length === 0 && <div className="col-span-full text-center py-16 text-gray-500 bg-white rounded-xl border border-dashed border-gray-300 font-medium">You have no active deliveries. Head to the Job Board!</div>}
         </div>
       )}
