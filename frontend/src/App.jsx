@@ -578,6 +578,8 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers, show
         };
         onRegister(newUser);
         showToast("Account Created Successfully!", "success");
+        setOtpSent(false);
+        setActiveTab('login');
       });
     }
   };
