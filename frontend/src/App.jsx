@@ -5,177 +5,54 @@ import {
   FileText, Globe, Info, Heart, Truck, Zap, BarChart3, ChevronRight, 
   Smartphone, Mail, Lock, ArrowLeft, RefreshCw, Check, KeyRound, Video, 
   X, StopCircle, PlayCircle, Plus, Trash2, List, UtensilsCrossed, Bike, ArrowRight,
-  Lightbulb, Database, ClipboardList, Droplets, Leaf
+  Lightbulb, Database, ClipboardList, Droplets, Leaf, Award, Ban, History
 } from 'lucide-react';
 
 // --- GLOBAL STYLES FOR ANIMATIONS ---
 const GlobalStyles = () => (
   <style>{`
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
-    
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     .animate-slideUp { animation: slideUp 0.6s ease-out forwards; }
-    
-    @keyframes pulse-soft {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.8; }
-    }
+    @keyframes slideInRight { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+    .animate-slideInRight { animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
     .animate-pulse-soft { animation: pulse-soft 2s infinite; }
-
-    .glass-panel {
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    .glass-card {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(8px);
-      transition: all 0.3s ease;
-    }
-    .glass-card:hover {
-      background: rgba(255, 255, 255, 0.95);
-      transform: translateY(-4px);
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    }
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background-color: rgba(156, 163, 175, 0.5);
-      border-radius: 10px;
-    }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(156, 163, 175, 0.5); border-radius: 10px; }
   `}</style>
 );
 
 // --- MOCK DATA & CONFIG ---
-
-const USER_ROLES = {
-  DONOR: 'donor',
-  RECEIVER: 'receiver',
-  VOLUNTEER: 'volunteer',
-  ADMIN: 'admin'
-};
-
-const FOOD_TYPES = [
-  'Rice / Grains', 'Curry / Gravy', 'Roti / Bread', 'Dessert', 'Snacks', 'Raw Vegetables', 'Mixed Meal'
-];
-
-// Calculation mapping: How many servings per 1 kg/liter for Adults vs Children
-const FOOD_SERVING_RATIOS = {
-  'Rice / Grains': { adult: 6, child: 8 },      
-  'Curry / Gravy': { adult: 4, child: 6 },      
-  'Roti / Bread': { adult: 8, child: 12 },      
-  'Dessert': { adult: 10, child: 15 },          
-  'Snacks': { adult: 10, child: 15 },           
-  'Raw Vegetables': { adult: 5, child: 7 },     
-  'Mixed Meal': { adult: 2.5, child: 4 }        
-};
-
-const PACKAGING_TYPES = [
-  { id: 'sealed', label: 'Sealed / Unopened', risk: 0 },
-  { id: 'secure', label: 'Securely Packed (Home)', risk: 10 },
-  { id: 'open', label: 'Open / Loose', risk: 40 }
-];
-
-const STORAGE_CONDITIONS = [
-  { id: 'hot', label: 'Hot (> 60°C)', risk: 0 },
-  { id: 'chilled', label: 'Chilled / Refrigerated', risk: 5 },
-  { id: 'room', label: 'Room Temperature', risk: 20 }
-];
-
-const BG_IMAGES = [
-  'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=1600&auto=format&fit=crop', 
-  'https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=1600&auto=format&fit=crop', 
-  'https://images.unsplash.com/photo-1593113598332-cd288d649433?q=80&w=1600&auto=format&fit=crop', 
-  'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=1600&auto=format&fit=crop'  
-];
+const USER_ROLES = { DONOR: 'donor', RECEIVER: 'receiver', VOLUNTEER: 'volunteer', ADMIN: 'admin' };
+const FOOD_TYPES = ['Rice / Grains', 'Curry / Gravy', 'Roti / Bread', 'Dessert', 'Snacks', 'Raw Vegetables', 'Mixed Meal'];
+const FOOD_SERVING_RATIOS = { 'Rice / Grains': { adult: 6, child: 8 }, 'Curry / Gravy': { adult: 4, child: 6 }, 'Roti / Bread': { adult: 8, child: 12 }, 'Dessert': { adult: 10, child: 15 }, 'Snacks': { adult: 10, child: 15 }, 'Raw Vegetables': { adult: 5, child: 7 }, 'Mixed Meal': { adult: 2.5, child: 4 } };
+const BG_IMAGES = ['https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=1600', 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=1600', 'https://images.unsplash.com/photo-1593113598332-cd288d649433?q=80&w=1600'];
 
 const INITIAL_USERS = [
-  { id: 1, name: 'Sasi Kapoor', role: USER_ROLES.DONOR, type: 'Individual', email: 'sasi@lpu.in', phone: '9347556855', password: 'password', location: { lat: 31.255, lng: 75.705 } }, 
-  { id: 2, name: 'Hope Foundation', role: USER_ROLES.RECEIVER, type: 'NGO', capacity: 200, capacityChildren: 100, capacityAdults: 100, email: 'help@hope.org', phone: '7032374400', password: 'password', location: { lat: 31.260, lng: 75.710 }, status: 'Active Now', demand: 'High' },
-  { id: 3, name: 'Safe Admin', role: USER_ROLES.ADMIN, email: 'admin@shareplate.org', phone: '0000000000', password: 'password' },
-  { id: 4, name: 'City Care Trust', role: USER_ROLES.RECEIVER, type: 'NGO', capacity: 50, capacityChildren: 0, capacityAdults: 50, email: 'care@city.org', phone: '9876543210', password: 'password', location: { lat: 31.250, lng: 75.700 }, status: 'Last active 5m ago', demand: 'Moderate' },
-  { id: 5, name: 'Global Feed Initiative', role: USER_ROLES.RECEIVER, type: 'NGO', capacity: 500, capacityChildren: 200, capacityAdults: 300, email: 'contact@globalfeed.org', phone: '1122334455', password: 'password', location: { lat: 31.270, lng: 75.720 }, status: 'Active Now', demand: 'Critical' },
-  { id: 6, name: 'Rahul Verma', role: USER_ROLES.VOLUNTEER, type: 'Individual', email: 'volunteer@shareplate.org', phone: '9988776655', password: 'password', location: { lat: 31.258, lng: 75.708 } },
-  { id: 7, name: 'Green Leaf Restaurant', role: USER_ROLES.DONOR, type: 'Restaurant', email: 'greenleaf@demo.com', phone: '9876543211', password: 'password', location: { lat: 31.258, lng: 75.712 } },
-  { id: 8, name: 'Ravi Sharma', role: USER_ROLES.DONOR, type: 'Individual', email: 'ravi@demo.com', phone: '9876543212', password: 'password', location: { lat: 31.250, lng: 75.700 } },
-  { id: 9, name: 'Grand Wedding Hall', role: USER_ROLES.DONOR, type: 'Event', email: 'grandwed@demo.com', phone: '9876543213', password: 'password', location: { lat: 31.265, lng: 75.725 } },
-  { id: 10, name: 'Smile Kids Orphanage', role: USER_ROLES.RECEIVER, type: 'NGO', capacity: 130, capacityChildren: 120, capacityAdults: 10, email: 'smile@demo.org', phone: '9876500001', password: 'password', location: { lat: 31.240, lng: 75.720 }, status: 'Active Now', demand: 'High' },
-  { id: 11, name: 'Asha Old Age Home', role: USER_ROLES.RECEIVER, type: 'NGO', capacity: 60, capacityChildren: 0, capacityAdults: 60, email: 'asha@demo.org', phone: '9876500002', password: 'password', location: { lat: 31.250, lng: 75.690 }, status: 'Active Now', demand: 'Moderate' },
-  { id: 12, name: 'Jalandhar Slum Relief', role: USER_ROLES.RECEIVER, type: 'NGO', capacity: 350, capacityChildren: 200, capacityAdults: 150, email: 'jsrelief@demo.org', phone: '9876500003', password: 'password', location: { lat: 31.265, lng: 75.730 }, status: 'Last active 1h ago', demand: 'Critical' },
-  { id: 13, name: 'Helping Hands Trust', role: USER_ROLES.RECEIVER, type: 'NGO', capacity: 80, capacityChildren: 40, capacityAdults: 40, email: 'hands@demo.org', phone: '9876500004', password: 'password', location: { lat: 31.245, lng: 75.705 }, status: 'Active Now', demand: 'High' },
-  { id: 14, name: 'Food For All Foundation', role: USER_ROLES.RECEIVER, type: 'NGO', capacity: 400, capacityChildren: 100, capacityAdults: 300, email: 'ffa@demo.org', phone: '9876500005', password: 'password', location: { lat: 31.275, lng: 75.715 }, status: 'Active Now', demand: 'Critical' },
-  { id: 15, name: 'Sewa Society', role: USER_ROLES.RECEIVER, type: 'NGO', capacity: 200, capacityChildren: 80, capacityAdults: 120, email: 'sewa@demo.org', phone: '9876500006', password: 'password', location: { lat: 31.235, lng: 75.685 }, status: 'Active Now', demand: 'Moderate' },
-  { id: 16, name: 'Navjeevan Shelter', role: USER_ROLES.RECEIVER, type: 'NGO', capacity: 70, capacityChildren: 50, capacityAdults: 20, email: 'navjeevan@demo.org', phone: '9876500007', password: 'password', location: { lat: 31.280, lng: 75.700 }, status: 'Active Now', demand: 'High' },
-  { id: 17, name: 'Umeed Care Center', role: USER_ROLES.RECEIVER, type: 'NGO', capacity: 100, capacityChildren: 30, capacityAdults: 70, email: 'umeed@demo.org', phone: '9876500008', password: 'password', location: { lat: 31.260, lng: 75.680 }, status: 'Last active 2h ago', demand: 'Moderate' },
-  { id: 18, name: 'Bright Future Home', role: USER_ROLES.RECEIVER, type: 'NGO', capacity: 165, capacityChildren: 150, capacityAdults: 15, email: 'bright@demo.org', phone: '9876500009', password: 'password', location: { lat: 31.290, lng: 75.740 }, status: 'Active Now', demand: 'High' },
-  { id: 19, name: 'Community Kitchen Jal.', role: USER_ROLES.RECEIVER, type: 'NGO', capacity: 650, capacityChildren: 250, capacityAdults: 400, email: 'ckj@demo.org', phone: '9876500010', password: 'password', location: { lat: 31.255, lng: 75.750 }, status: 'Active Now', demand: 'Critical' },
-  { id: 20, name: 'Sunrise Cafe', role: USER_ROLES.DONOR, type: 'Restaurant', email: 'sunrise@demo.com', phone: '9876500020', password: 'password', location: { lat: 31.252, lng: 75.702 } },
-  { id: 21, name: 'Urban Harvest', role: USER_ROLES.DONOR, type: 'Restaurant', email: 'urban@demo.com', phone: '9876500021', password: 'password', location: { lat: 31.261, lng: 75.718 } },
-  { id: 22, name: 'Priya Singh', role: USER_ROLES.DONOR, type: 'Individual', email: 'priya@demo.com', phone: '9876500022', password: 'password', location: { lat: 31.245, lng: 75.695 } },
-  { id: 23, name: 'Bakers Point', role: USER_ROLES.DONOR, type: 'Restaurant', email: 'bakers@demo.com', phone: '9876500023', password: 'password', location: { lat: 31.275, lng: 75.725 } },
-  { id: 24, name: 'Tandoori Nights', role: USER_ROLES.DONOR, type: 'Restaurant', email: 'tandoori@demo.com', phone: '9876500024', password: 'password', location: { lat: 31.259, lng: 75.710 } },
-  { id: 25, name: 'Corporate Event Plaza', role: USER_ROLES.DONOR, type: 'Event', email: 'plaza@demo.com', phone: '9876500025', password: 'password', location: { lat: 31.280, lng: 75.730 } },
-  { id: 26, name: 'Amrit Sweets', role: USER_ROLES.DONOR, type: 'Restaurant', email: 'amrit@demo.com', phone: '9876500026', password: 'password', location: { lat: 31.240, lng: 75.685 } },
-  { id: 27, name: 'Vikram Mehta', role: USER_ROLES.DONOR, type: 'Individual', email: 'vikram@demo.com', phone: '9876500027', password: 'password', location: { lat: 31.265, lng: 75.700 } },
-  { id: 28, name: 'Hotel Grand', role: USER_ROLES.DONOR, type: 'Event', email: 'grand@demo.com', phone: '9876500028', password: 'password', location: { lat: 31.255, lng: 75.740 } },
-  { id: 29, name: 'Spice Route', role: USER_ROLES.DONOR, type: 'Restaurant', email: 'spice@demo.com', phone: '9876500029', password: 'password', location: { lat: 31.248, lng: 75.715 } },
-  { id: 30, name: 'Fresh Farms', role: USER_ROLES.DONOR, type: 'Restaurant', email: 'fresh@demo.com', phone: '9876500030', password: 'password', location: { lat: 31.270, lng: 75.690 } },
-  { id: 31, name: 'Neha Sharma', role: USER_ROLES.DONOR, type: 'Individual', email: 'neha@demo.com', phone: '9876500031', password: 'password', location: { lat: 31.250, lng: 75.720 } },
-  { id: 32, name: 'Royal Banquet', role: USER_ROLES.DONOR, type: 'Event', email: 'royal@demo.com', phone: '9876500032', password: 'password', location: { lat: 31.285, lng: 75.705 } },
-  { id: 33, name: 'Little Italy', role: USER_ROLES.DONOR, type: 'Restaurant', email: 'italy@demo.com', phone: '9876500033', password: 'password', location: { lat: 31.262, lng: 75.735 } },
-  { id: 34, name: 'Healthy Bites', role: USER_ROLES.DONOR, type: 'Restaurant', email: 'healthy@demo.com', phone: '9876500034', password: 'password', location: { lat: 31.242, lng: 75.700 } },
-  { id: 35, name: 'Mega Mart Deli', role: USER_ROLES.DONOR, type: 'Restaurant', email: 'megamart@demo.com', phone: '9876500035', password: 'password', location: { lat: 31.258, lng: 75.680 } }
+  { id: 1, name: 'Sasi Kapoor', role: USER_ROLES.DONOR, type: 'Individual', email: 'sasi@lpu.in', phone: '9347556855', password: 'password', location: { lat: 31.255, lng: 75.705 }, suspended: false }, 
+  { id: 2, name: 'Hope Foundation', role: USER_ROLES.RECEIVER, type: 'NGO', capacity: 200, capacityChildren: 100, capacityAdults: 100, email: 'help@hope.org', phone: '7032374400', password: 'password', location: { lat: 31.260, lng: 75.710 }, status: 'Active Now', demand: 'High', suspended: false },
+  { id: 3, name: 'Safe Admin', role: USER_ROLES.ADMIN, email: 'admin@shareplate.org', phone: '0000000000', password: 'password', suspended: false },
+  { id: 4, name: 'City Care Trust', role: USER_ROLES.RECEIVER, type: 'NGO', capacity: 50, capacityChildren: 0, capacityAdults: 50, email: 'care@city.org', phone: '9876543210', password: 'password', location: { lat: 31.250, lng: 75.700 }, status: 'Last active 5m ago', demand: 'Moderate', suspended: false },
+  { id: 6, name: 'Rahul Verma', role: USER_ROLES.VOLUNTEER, type: 'Individual', email: 'volunteer@shareplate.org', phone: '9988776655', password: 'password', location: { lat: 31.258, lng: 75.708 }, suspended: false },
+  { id: 7, name: 'Green Leaf Restaurant', role: USER_ROLES.DONOR, type: 'Restaurant', email: 'greenleaf@demo.com', phone: '9876543211', password: 'password', location: { lat: 31.258, lng: 75.712 }, suspended: false },
 ];
 
 const INITIAL_DONATIONS = [
-  { id: 101, donorId: 1, foodType: 'Rice / Grains', quantity: 5, servingsAdults: 30, servingsChildren: 40, prepTime: '2 hours ago', packaging: 'secure', storage: 'hot', status: 'Safe to Donate', score: 95, image: 'https://images.unsplash.com/photo-1596560548464-f010549b84d7?auto=format&fit=crop&q=80&w=400', mediaType: 'image', timestamp: new Date().toISOString(), location: { lat: 31.255, lng: 75.705 }, claimedBy: 2, pickedUp: false, delivered: true },
-  { id: 102, donorId: 1, foodType: 'Mixed Meal', quantity: 2, servingsAdults: 5, servingsChildren: 8, prepTime: '8 hours ago', packaging: 'open', storage: 'room', status: 'Unsafe for Redistribution', score: 30, image: 'https://images.unsplash.com/photo-1584844308364-7c9802766867?auto=format&fit=crop&q=80&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 3600000).toISOString(), location: { lat: 31.255, lng: 75.705 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 103, donorId: 1, foodType: 'Raw Vegetables', quantity: 15, servingsAdults: 75, servingsChildren: 105, prepTime: '1 hour ago', packaging: 'sealed', storage: 'chilled', status: 'Safe to Donate', score: 100, image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 1800000).toISOString(), location: { lat: 31.255, lng: 75.705 }, claimedBy: 4, pickedUp: true, delivered: false },
-  { id: 104, donorId: 7, foodType: 'Curry / Gravy', quantity: 10, servingsAdults: 40, servingsChildren: 60, prepTime: '1 hour ago', packaging: 'sealed', storage: 'hot', status: 'Safe to Donate', score: 98, image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 3600000).toISOString(), location: { lat: 31.260, lng: 75.715 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 105, donorId: 8, foodType: 'Roti / Bread', quantity: 4, servingsAdults: 32, servingsChildren: 48, prepTime: '3 hours ago', packaging: 'secure', storage: 'room', status: 'Safe to Donate', score: 85, image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 7200000).toISOString(), location: { lat: 31.250, lng: 75.700 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 106, donorId: 9, foodType: 'Dessert', quantity: 8, servingsAdults: 80, servingsChildren: 120, prepTime: '2 hours ago', packaging: 'sealed', storage: 'chilled', status: 'Safe to Donate', score: 99, image: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 5400000).toISOString(), location: { lat: 31.265, lng: 75.725 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 107, donorId: 7, foodType: 'Snacks', quantity: 5, servingsAdults: 50, servingsChildren: 75, prepTime: '4 hours ago', packaging: 'secure', storage: 'room', status: 'Safe to Donate', score: 88, image: 'https://images.unsplash.com/photo-1606755456206-b25206cde27e?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 10800000).toISOString(), location: { lat: 31.255, lng: 75.695 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 108, donorId: 8, foodType: 'Raw Vegetables', quantity: 12, servingsAdults: 60, servingsChildren: 84, prepTime: '10 hours ago', packaging: 'open', storage: 'room', status: 'Safe to Donate', score: 82, image: 'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 43200000).toISOString(), location: { lat: 31.245, lng: 75.710 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 109, donorId: 9, foodType: 'Mixed Meal', quantity: 20, servingsAdults: 50, servingsChildren: 80, prepTime: '1.5 hours ago', packaging: 'secure', storage: 'hot', status: 'Safe to Donate', score: 94, image: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 4500000).toISOString(), location: { lat: 31.270, lng: 75.705 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 110, donorId: 7, foodType: 'Rice / Grains', quantity: 15, servingsAdults: 90, servingsChildren: 120, prepTime: '3.5 hours ago', packaging: 'sealed', storage: 'room', status: 'Safe to Donate', score: 89, image: 'https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 12600000).toISOString(), location: { lat: 31.260, lng: 75.690 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 111, donorId: 8, foodType: 'Curry / Gravy', quantity: 6, servingsAdults: 24, servingsChildren: 36, prepTime: '2.5 hours ago', packaging: 'secure', storage: 'hot', status: 'Safe to Donate', score: 91, image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 9000000).toISOString(), location: { lat: 31.258, lng: 75.712 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 112, donorId: 1, foodType: 'Snacks', quantity: 3, servingsAdults: 30, servingsChildren: 45, prepTime: '5 hours ago', packaging: 'sealed', storage: 'room', status: 'Safe to Donate', score: 86, image: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 18000000).toISOString(), location: { lat: 31.248, lng: 75.708 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 113, donorId: 9, foodType: 'Dessert', quantity: 10, servingsAdults: 100, servingsChildren: 150, prepTime: '1 hour ago', packaging: 'secure', storage: 'chilled', status: 'Safe to Donate', score: 97, image: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 3600000).toISOString(), location: { lat: 31.252, lng: 75.720 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 114, donorId: 20, foodType: 'Roti / Bread', quantity: 5, servingsAdults: 40, servingsChildren: 60, prepTime: '1.5 hours ago', packaging: 'secure', storage: 'hot', status: 'Safe to Donate', score: 92, image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 5400000).toISOString(), location: { lat: 31.252, lng: 75.702 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 115, donorId: 21, foodType: 'Mixed Meal', quantity: 15, servingsAdults: 37, servingsChildren: 60, prepTime: '2 hours ago', packaging: 'sealed', storage: 'chilled', status: 'Safe to Donate', score: 98, image: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 7200000).toISOString(), location: { lat: 31.261, lng: 75.718 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 116, donorId: 23, foodType: 'Dessert', quantity: 6, servingsAdults: 60, servingsChildren: 90, prepTime: '4 hours ago', packaging: 'secure', storage: 'chilled', status: 'Safe to Donate', score: 89, image: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 14400000).toISOString(), location: { lat: 31.275, lng: 75.725 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 117, donorId: 24, foodType: 'Curry / Gravy', quantity: 8, servingsAdults: 32, servingsChildren: 48, prepTime: '3 hours ago', packaging: 'sealed', storage: 'hot', status: 'Safe to Donate', score: 94, image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 10800000).toISOString(), location: { lat: 31.259, lng: 75.710 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 118, donorId: 26, foodType: 'Snacks', quantity: 4, servingsAdults: 40, servingsChildren: 60, prepTime: '5 hours ago', packaging: 'secure', storage: 'room', status: 'Safe to Donate', score: 84, image: 'https://images.unsplash.com/photo-1606755456206-b25206cde27e?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 18000000).toISOString(), location: { lat: 31.240, lng: 75.685 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 119, donorId: 28, foodType: 'Rice / Grains', quantity: 25, servingsAdults: 150, servingsChildren: 200, prepTime: '1 hour ago', packaging: 'sealed', storage: 'hot', status: 'Safe to Donate', score: 99, image: 'https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 3600000).toISOString(), location: { lat: 31.255, lng: 75.740 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 120, donorId: 30, foodType: 'Raw Vegetables', quantity: 18, servingsAdults: 90, servingsChildren: 126, prepTime: '12 hours ago', packaging: 'open', storage: 'room', status: 'Safe to Donate', score: 75, image: 'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 43200000).toISOString(), location: { lat: 31.270, lng: 75.690 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 121, donorId: 32, foodType: 'Mixed Meal', quantity: 30, servingsAdults: 75, servingsChildren: 120, prepTime: '2.5 hours ago', packaging: 'secure', storage: 'hot', status: 'Safe to Donate', score: 91, image: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 9000000).toISOString(), location: { lat: 31.285, lng: 75.705 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 122, donorId: 33, foodType: 'Roti / Bread', quantity: 7, servingsAdults: 56, servingsChildren: 84, prepTime: '3.5 hours ago', packaging: 'sealed', storage: 'room', status: 'Safe to Donate', score: 87, image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 12600000).toISOString(), location: { lat: 31.262, lng: 75.735 }, claimedBy: null, pickedUp: false, delivered: false },
-  { id: 123, donorId: 35, foodType: 'Dessert', quantity: 12, servingsAdults: 120, servingsChildren: 180, prepTime: '6 hours ago', packaging: 'secure', storage: 'chilled', status: 'Safe to Donate', score: 88, image: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 21600000).toISOString(), location: { lat: 31.258, lng: 75.680 }, claimedBy: null, pickedUp: false, delivered: false }
+  { id: 101, donorId: 1, foodType: 'Rice / Grains', quantity: 5, servingsAdults: 30, servingsChildren: 40, prepTime: '2 hours ago', packaging: 'secure', storage: 'hot', status: 'Delivered', score: 95, image: 'https://images.unsplash.com/photo-1596560548464-f010549b84d7?auto=format&fit=crop&q=80&w=400', mediaType: 'image', timestamp: new Date().toISOString(), location: { lat: 31.255, lng: 75.705 }, claimedBy: 2, receiverId: 2, volunteerId: 6, pickedUp: true, delivered: true },
+  { id: 103, donorId: 7, foodType: 'Raw Vegetables', quantity: 15, servingsAdults: 75, servingsChildren: 105, prepTime: '1 hour ago', packaging: 'sealed', storage: 'chilled', status: 'Safe to Donate', score: 100, image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 1800000).toISOString(), location: { lat: 31.255, lng: 75.705 }, claimedBy: null, receiverId: null, volunteerId: null, pickedUp: false, delivered: false },
+  { id: 104, donorId: 7, foodType: 'Curry / Gravy', quantity: 10, servingsAdults: 40, servingsChildren: 60, prepTime: '1 hour ago', packaging: 'sealed', storage: 'hot', status: 'Awaiting Volunteer', score: 98, image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=400', mediaType: 'image', timestamp: new Date(Date.now() - 3600000).toISOString(), location: { lat: 31.260, lng: 75.715 }, claimedBy: 4, receiverId: 4, volunteerId: null, pickedUp: false, delivered: false },
 ];
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
-  const R = 6371; 
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const R = 6371; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2); 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-  return (R * c).toFixed(1);
+  return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(1);
 };
 
-// Calculate Password Strength Helper
 const calculatePasswordStrength = (password) => {
   let strength = 0;
   if (password.length > 5) strength += 1;
@@ -183,20 +60,36 @@ const calculatePasswordStrength = (password) => {
   if (/[A-Z]/.test(password)) strength += 1;
   if (/[0-9]/.test(password)) strength += 1;
   if (/[^A-Za-z0-9]/.test(password)) strength += 1;
-  return Math.min(strength, 4); // Max 4 levels
+  return Math.min(strength, 4); 
+};
+
+// --- CUSTOM TOAST COMPONENT ---
+const ToastNotification = ({ toast, onClose }) => {
+  useEffect(() => {
+    if (toast) { const timer = setTimeout(onClose, 4000); return () => clearTimeout(timer); }
+  }, [toast, onClose]);
+
+  if (!toast) return null;
+  return (
+    <div className={`fixed bottom-6 right-6 z-[100] px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 text-white animate-slideInRight ${toast.type === 'error' ? 'bg-red-600' : 'bg-green-600'}`}>
+      {toast.type === 'error' ? <AlertTriangle size={20} /> : <CheckCircle size={20} />}
+      <span className="font-bold text-sm tracking-wide">{toast.message}</span>
+      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100 transition-opacity"><X size={16} /></button>
+    </div>
+  );
 };
 
 // --- COMPONENTS ---
 
 const Navbar = ({ user, onLogout, setView, onLoginClick }) => (
-  <nav className="fixed w-full z-50 transition-all duration-300 bg-white/90 backdrop-blur-md shadow-sm">
+  <nav className="fixed w-full z-50 transition-all duration-300 bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between h-16 relative">
         <div className="flex items-center cursor-pointer group" onClick={() => setView('landing')}>
           <div className="bg-orange-600 p-2 rounded-lg group-hover:scale-110 transition-transform duration-200 shadow-md">
             <UtensilsCrossed size={20} className="text-white" />
           </div>
-          <span className="ml-2 font-bold text-xl tracking-tight text-gray-800 group-hover:text-orange-600 transition-colors">SharePlate</span>
+          <span className="ml-2 font-black text-xl tracking-tight text-gray-900 group-hover:text-orange-600 transition-colors">SharePlate</span>
         </div>
         
         <div className="hidden md:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
@@ -207,15 +100,15 @@ const Navbar = ({ user, onLogout, setView, onLoginClick }) => (
         
         {user ? (
           <div className="flex items-center space-x-4">
-            <button onClick={() => setView('dashboard')} className="hidden md:block text-sm font-medium text-gray-600 hover:text-orange-600 transition-colors">Dashboard</button>
-            <span className="hidden md:block text-xs font-semibold bg-orange-100 text-orange-700 px-3 py-1 rounded-full border border-orange-200 uppercase">{user.role}</span>
+            <button onClick={() => setView('dashboard')} className="hidden md:block text-sm font-bold text-gray-800 hover:text-orange-600 transition-colors">Dashboard</button>
+            <span className="hidden md:block text-xs font-bold bg-orange-100 text-orange-800 px-3 py-1 rounded-full border border-orange-200 uppercase">{user.role}</span>
             <button onClick={onLogout} className="p-2 rounded-full hover:bg-red-50 text-gray-500 hover:text-red-500 transition-all duration-300" title="Logout">
               <LogOut size={20} />
             </button>
           </div>
         ) : (
-          <button onClick={onLoginClick} className="bg-orange-600 text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-orange-700 hover:shadow-lg transition-all transform hover:-translate-y-0.5">
-            Login / Join
+          <button onClick={onLoginClick} className="bg-gray-900 text-white px-5 py-2.5 rounded-full font-bold text-sm hover:bg-black hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+            Login / Join Platform
           </button>
         )}
       </div>
@@ -251,15 +144,12 @@ const LandingPage = ({ onGetStarted, onLearnMore, availableUsers }) => {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const { latitude, longitude } = pos.coords;
-          const nearby = availableUsers
-            .filter(u => u.role === USER_ROLES.RECEIVER)
+          const nearby = availableUsers.filter(u => u.role === USER_ROLES.RECEIVER && !u.suspended)
             .map(ngo => ({ ...ngo, distance: calculateDistance(latitude, longitude, ngo.location.lat, ngo.location.lng) }))
-            .sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))
-            .slice(0, 3);
-          setNearbyNGOs(nearby);
-          setLocStatus("success");
+            .sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance)).slice(0, 3);
+          setNearbyNGOs(nearby); setLocStatus("success");
         },
-        (err) => {
+        () => {
           setLocStatus("error");
           setLocationError("Location access denied. Enable GPS to see data.");
         }
@@ -270,11 +160,7 @@ const LandingPage = ({ onGetStarted, onLearnMore, availableUsers }) => {
     }
   };
 
-  useEffect(() => {
-    if (landingSection === 'gps') {
-      handleLocateNGOs();
-    }
-  }, [landingSection, availableUsers]);
+  useEffect(() => { if (landingSection === 'gps') handleLocateNGOs(); }, [landingSection, availableUsers]);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -283,28 +169,16 @@ const LandingPage = ({ onGetStarted, onLearnMore, availableUsers }) => {
           <div key={index} className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out ${index === currentBg ? 'opacity-100' : 'opacity-0'}`} style={{ backgroundImage: `url(${img})` }} />
         ))}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-orange-50/10" />
-        
         <div className="relative z-10 text-center px-4 max-w-5xl mx-auto text-white space-y-8 animate-fadeIn">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20">
             <ShieldCheck size={20} className="text-orange-400" />
-            <span className="text-sm font-medium tracking-wide">Verified Food Safety Standard</span>
+            <span className="text-sm font-bold tracking-wide">Enterprise Food Safety Standard</span>
           </div>
-          
-          <h1 className="text-5xl md:text-7xl font-extrabold leading-tight tracking-tight">
-            Stop Waste. <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-300">Feed Hope.</span>
-          </h1>
-          
-          <p className="text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto font-light">
-            Connect surplus food with local communities in real-time. Verified safe by the system, delivered by volunteers.
-          </p>
-          
+          <h1 className="text-5xl md:text-7xl font-extrabold leading-tight tracking-tight">Stop Waste. <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-300">Feed Hope.</span></h1>
+          <p className="text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto font-light">Connect surplus food with local communities in real-time. Verified safe by the system, delivered by volunteers.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-            <button onClick={onGetStarted} className="group relative inline-flex items-center gap-3 bg-orange-600 hover:bg-orange-500 text-white px-8 py-4 rounded-full font-bold text-lg transition-all shadow-xl hover:shadow-orange-500/40 hover:-translate-y-1 flex items-center justify-center">
-              Start Donating <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button onClick={onLearnMore} className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 px-8 py-4 rounded-full font-bold text-lg transition-all flex items-center justify-center gap-2">
-              <Info size={20} /> Discover How
-            </button>
+            <button onClick={onGetStarted} className="group relative inline-flex items-center gap-3 bg-orange-600 hover:bg-orange-500 text-white px-8 py-4 rounded-full font-bold text-lg transition-all shadow-xl hover:-translate-y-1">Start Donating <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" /></button>
+            <button onClick={onLearnMore} className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 px-8 py-4 rounded-full font-bold text-lg transition-all flex items-center justify-center gap-2"><Info size={20} /> Discover How</button>
           </div>
         </div>
 
@@ -321,7 +195,6 @@ const LandingPage = ({ onGetStarted, onLearnMore, availableUsers }) => {
         <div className="absolute inset-0 bg-gradient-to-r from-orange-900/95 via-orange-900/80 to-black/40 pointer-events-none" />
 
         <div className="relative z-10 max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-start text-white">
-          
           <div className="space-y-8">
             <div className="flex flex-wrap gap-3 mb-8">
               {[
@@ -399,18 +272,11 @@ const LandingPage = ({ onGetStarted, onLearnMore, availableUsers }) => {
                       { u: 'Fresh Bakery', a: 'Donated 10kg Bread', t: '25m ago' },
                       { u: 'City Care Trust', a: 'Completed Delivery', t: '40m ago' },
                     ].map((item, index) => (
-                      <div 
-                        key={index} 
-                        className="bg-orange-900/40 backdrop-blur-sm border border-orange-500/30 p-4 rounded-lg flex items-center gap-4 hover:translate-x-2 transition-transform duration-300 hover:bg-orange-900/60"
-                      >
-                        <div className="bg-orange-500/20 p-2 rounded-full">
-                          <Heart size={18} className="text-orange-300 fill-orange-300/20" />
-                        </div>
+                      <div key={index} className="bg-orange-900/40 backdrop-blur-sm border border-orange-500/30 p-4 rounded-lg flex items-center gap-4 hover:translate-x-2 transition-transform duration-300 hover:bg-orange-900/60">
+                        <div className="bg-orange-500/20 p-2 rounded-full"><Heart size={18} className="text-orange-300 fill-orange-300/20" /></div>
                         <div>
                           <p className="font-medium text-sm text-white">{item.u} <span className="text-gray-300 font-normal">{item.a}</span></p>
-                          <p className="text-xs text-orange-400 flex items-center gap-1 mt-1">
-                            <Clock size={10} /> {item.t}
-                          </p>
+                          <p className="text-xs text-orange-400 flex items-center gap-1 mt-1"><Clock size={10} /> {item.t}</p>
                         </div>
                       </div>
                     ))}
@@ -420,9 +286,7 @@ const LandingPage = ({ onGetStarted, onLearnMore, availableUsers }) => {
 
               {landingSection === 'gps' && (
                 <div className="animate-slideUp space-y-4">
-                  <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
-                    <MapPin className="text-orange-400" /> Nearby Help
-                  </h2>
+                  <h2 className="text-2xl font-bold mb-2 flex items-center gap-2"><MapPin className="text-orange-400" /> Nearby Help</h2>
                   <p className="text-sm text-orange-200 mb-4">Locating registered NGOs active in your area using device GPS.</p>
                   
                   <div className="bg-white/90 backdrop-blur-xl text-gray-800 rounded-xl overflow-hidden shadow-2xl transition-all duration-300 max-h-[400px] overflow-y-auto custom-scrollbar">
@@ -450,8 +314,7 @@ const LandingPage = ({ onGetStarted, onLearnMore, availableUsers }) => {
                               <div>
                                 <div className="text-xs text-gray-500">Capacity: {ngo.capacity} meals (C: {ngo.capacityChildren} | A: {ngo.capacityAdults})</div>
                                 <div className="text-xs flex items-center gap-1 text-emerald-600 mt-1 font-medium">
-                                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                                  {ngo.status || "Active Now"}
+                                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> {ngo.status || "Active Now"}
                                 </div>
                               </div>
                               <div className="text-right">
@@ -477,7 +340,7 @@ const LandingPage = ({ onGetStarted, onLearnMore, availableUsers }) => {
 
           <div className="hidden lg:flex justify-center items-center h-full">
              <div className="relative w-full max-w-md aspect-square bg-white/5 backdrop-blur-md rounded-full border border-white/10 flex items-center justify-center shadow-2xl animate-pulse-soft">
-                <Globe className="w-64 h-64 text-orange-500/50" />
+                <Globe size={150} className="text-orange-500/50" />
                 <div className="absolute top-1/4 left-1/4 bg-white p-3 rounded-xl shadow-xl animate-slideUp" style={{animationDelay: '0.2s'}}>
                   <MapPin className="text-orange-500"/>
                 </div>
@@ -489,89 +352,70 @@ const LandingPage = ({ onGetStarted, onLearnMore, availableUsers }) => {
                 </div>
              </div>
           </div>
-
         </div>
       </div>
     </div>
   );
 };
 
-const HowItWorksPage = ({ onGetStarted }) => (
-  <div className="min-h-screen bg-orange-50/50 pt-32 pb-16 px-4 animate-fadeIn">
-    <div className="max-w-5xl mx-auto">
-      <div className="text-center mb-16">
-        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4">
-          How SharePlate <span className="text-orange-600">Works</span>
-        </h1>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          Our patent-aligned <span className="font-semibold text-orange-600">Context-Aware Multimodal Food Safety Verification System</span> uses deduction-based risk scoring to ensure food safety while seamlessly matching donations with those in need.
-        </p>
-      </div>
+const HowItWorksPage = ({ onGetStarted }) => {
+  const steps = [
+    { step: 1, title: '1. Data Acquisition Module', desc: 'The donor uploads a real-time photo or video of the surplus food through the app. Alongside the visual input, the donor provides critical contextual metadata, including food type, preparation time, storage condition (e.g., room temperature or chilled), packaging integrity, and estimated serving capacity.', icon: Camera },
+    { step: 2, title: '2. Image & Metadata Processing', desc: 'The system pre-processes the inputs. It evaluates the image for visual freshness cues—such as color consistency, surface condition, and visible contamination. Simultaneously, the metadata is processed to establish contextual risk factors, like elapsed time since preparation and storage vulnerability.', icon: FileText },
+    { step: 3, title: '3. Multimodal Fusion Engine', desc: 'The system does not rely on just one input. The multimodal fusion engine intelligently integrates the extracted visual features with the contextual metadata, creating a unified representation of the food\'s overall condition and risk profile.', icon: Activity },
+    { step: 4, title: '4. Deduction-Based Risk Scoring', desc: 'Starting with a perfect safety score of 100, the system applies specific deductions based on identified risk factors (e.g., deducting points for prolonged room temperature storage). A Contamination Override Mechanism ensures that if severe spoilage like mold is detected, the score instantly drops to zero.', icon: ShieldCheck },
+    { step: 5, title: '5. Safety Classification', desc: 'Based on the final computed score, the food is categorized into three strict classes: Safe to Donate (Score ≥ 70), Needs Manual Check (Score 40-69), or Unsafe for Redistribution (Score < 40). Only safe food moves forward in the redistribution cycle.', icon: CheckCircle },
+    { step: 6, title: '6. Intelligent NGO Allocation', desc: 'Once verified as safe, the matching engine cross-references the donated food\'s quantity with the real-time capacities and geolocations of registered NGOs. It instantly alerts the nearest NGO that has the exact capacity requirement to avoid secondary wastage.', icon: MapPin },
+    { step: 7, title: '7. Volunteer Dispatch', desc: 'Upon NGO acceptance, the system automatically assigns and routes a registered volunteer via GPS. The volunteer picks up the verified food and safely delivers it, tracking progress in real-time to complete the zero-waste lifecycle.', icon: Truck }
+  ];
 
-      <div className="space-y-8 relative before:absolute before:inset-0 before:ml-8 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-1 before:bg-gradient-to-b before:from-orange-100 before:via-orange-500 before:to-orange-100">
-        {[
-          { step: 1, title: '1. Data Acquisition Module', desc: 'The donor uploads a real-time photo or video of the surplus food through the app. Alongside the visual input, the donor provides critical contextual metadata, including food type, preparation time, storage condition (e.g., room temperature or chilled), packaging integrity, and estimated serving capacity.', icon: Camera },
-          { step: 2, title: '2. Image & Metadata Processing', desc: 'The system pre-processes the inputs. It evaluates the image for visual freshness cues—such as color consistency, surface condition, and visible contamination. Simultaneously, the metadata is processed to establish contextual risk factors, like elapsed time since preparation and storage vulnerability.', icon: FileText },
-          { step: 3, title: '3. Multimodal Fusion Engine', desc: 'The system does not rely on just one input. The multimodal fusion engine intelligently integrates the extracted visual features with the contextual metadata, creating a unified representation of the food\'s overall condition and risk profile.', icon: Activity },
-          { step: 4, title: '4. Deduction-Based Risk Scoring', desc: 'Starting with a perfect safety score of 100, the system applies specific deductions based on identified risk factors (e.g., deducting points for prolonged room temperature storage). A Contamination Override Mechanism ensures that if severe spoilage like mold is detected, the score instantly drops to zero.', icon: ShieldCheck },
-          { step: 5, title: '5. Safety Classification', desc: 'Based on the final computed score, the food is categorized into three strict classes: Safe to Donate (Score ≥ 70), Needs Manual Check (Score 40-69), or Unsafe for Redistribution (Score < 40). Only safe food moves forward in the redistribution cycle.', icon: CheckCircle },
-          { step: 6, title: '6. Intelligent NGO Allocation', desc: 'Once verified as safe, the matching engine cross-references the donated food\'s quantity with the real-time capacities and geolocations of registered NGOs. It instantly alerts the nearest NGO that has the exact capacity requirement to avoid secondary wastage.', icon: MapPin },
-          { step: 7, title: '7. Volunteer Dispatch', desc: 'Upon NGO acceptance, the system automatically assigns and routes a registered volunteer via GPS. The volunteer picks up the verified food and safely delivers it, tracking progress in real-time to complete the zero-waste lifecycle.', icon: Truck }
-        ].map((item, idx) => (
-          <div key={idx} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group animate-slideUp" style={{animationDelay: `${idx * 0.1}s`}}>
-            <div className="flex items-center justify-center w-16 h-16 rounded-full border-4 border-white bg-orange-500 text-white shadow-xl flex-shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 group-hover:scale-110 transition-transform duration-300">
-              <item.icon size={24} />
-            </div>
-            <div className="w-[calc(100%-5rem)] md:w-[calc(50%-3rem)] bg-white p-6 rounded-2xl shadow-lg border border-orange-100 group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
-              <p className="text-gray-600 leading-relaxed text-sm">{item.desc}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+  return (
+    <div className="min-h-screen bg-orange-50/50 pt-32 pb-16 px-4 animate-fadeIn">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-16">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4">
+            How SharePlate <span className="text-orange-600">Works</span>
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Our patent-aligned <span className="font-semibold text-orange-600">Context-Aware Multimodal Food Safety Verification System</span> uses deduction-based risk scoring to ensure food safety while seamlessly matching donations with those in need.
+          </p>
+        </div>
 
-      <div className="mt-20 text-center animate-fadeIn" style={{animationDelay: '0.8s'}}>
-        <button onClick={onGetStarted} className="bg-orange-600 hover:bg-orange-700 text-white px-10 py-4 rounded-full font-bold text-lg transition-all shadow-xl hover:shadow-orange-500/40 hover:-translate-y-1 inline-flex items-center gap-2">
-          Start Donating Now <ChevronRight size={20} />
-        </button>
+        <div className="space-y-8 relative before:absolute before:inset-0 before:ml-8 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-1 before:bg-gradient-to-b before:from-orange-100 before:via-orange-500 before:to-orange-100">
+          {steps.map((item, idx) => (
+            <div key={idx} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group animate-slideUp" style={{animationDelay: `${idx * 0.1}s`}}>
+              <div className="flex items-center justify-center w-16 h-16 rounded-full border-4 border-white bg-orange-500 text-white shadow-xl flex-shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 group-hover:scale-110 transition-transform duration-300">
+                <item.icon size={24} />
+              </div>
+              <div className="w-[calc(100%-5rem)] md:w-[calc(50%-3rem)] bg-white p-6 rounded-2xl shadow-lg border border-orange-100 group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
+                <p className="text-gray-600 leading-relaxed text-sm">{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-20 text-center animate-fadeIn" style={{animationDelay: '0.8s'}}>
+          <button onClick={onGetStarted} className="bg-orange-600 hover:bg-orange-700 text-white px-10 py-4 rounded-full font-bold text-lg transition-all shadow-xl hover:-translate-y-1 inline-flex items-center gap-2">
+            Start Donating Now <ChevronRight size={20} />
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const AboutUsPage = () => {
   const founders = [
-    { 
-      name: "Ronak Reddy", 
-      role: "Founder (Shareplate)", 
-      desc: "The visionary behind the SharePlate platform. Passionate about leveraging technology to achieve zero hunger, Ronak leads our core mission to bridge the gap between surplus food and scarcity.", 
-      img: "https://i.ibb.co/ZzXVxgwF/Ronak.jpg" 
-    },
-    { 
-      name: "Sairi Sathvik", 
-      role: "CEO", 
-      desc: "Sairi leads the strategic execution and overall operations of SharePlate. He ensures seamless connectivity, trust, and logistical efficiency between food donors, volunteers, and receiving NGOs.", 
-      img: "https://i.ibb.co/LhSjRQvs/Hero.jpg" 
-    },
-    { 
-      name: "Sasi Kapoor", 
-      role: "Managing Director (Information Service)", 
-      desc: "The technical architect of our multimodal data systems and intelligent NGO-matching engine. Sasi manages real-time data flows, platform stability, and the complex routing algorithms.", 
-      img: "https://i.ibb.co/My7bzB5t/Sasi.jpg" 
-    },
-    { 
-      name: "Tharak Reddy", 
-      role: "Managing Director (Food Quality)", 
-      desc: "Oversees the Context-Aware Risk Scoring models. Tharak defines strict food safety parameters to guarantee that only verifiably safe, quality food is approved for community redistribution.", 
-      img: "https://i.ibb.co/v64MMWRz/Tharak.jpg" 
-    }
+    { name: "Ronak Reddy", role: "Founder (Shareplate)", desc: "The visionary behind the SharePlate platform. Passionate about leveraging technology to achieve zero hunger, Ronak leads our core mission to bridge the gap between surplus food and scarcity.", img: "https://i.ibb.co/ZzXVxgwF/Ronak.jpg" },
+    { name: "Sairi Sathvik", role: "CEO", desc: "Sairi leads the strategic execution and overall operations of SharePlate. He ensures seamless connectivity, trust, and logistical efficiency between food donors, volunteers, and receiving NGOs.", img: "https://i.ibb.co/LhSjRQvs/Hero.jpg" },
+    { name: "Sasi Kapoor", role: "Managing Director (Information Service)", desc: "The technical architect of our multimodal data systems and intelligent NGO-matching engine. Sasi manages real-time data flows, platform stability, and the complex routing algorithms.", img: "https://i.ibb.co/My7bzB5t/Sasi.jpg" },
+    { name: "Tharak Reddy", role: "Managing Director (Food Quality)", desc: "Oversees the Context-Aware Risk Scoring models. Tharak defines strict food safety parameters to guarantee that only verifiably safe, quality food is approved for community redistribution.", img: "https://i.ibb.co/v64MMWRz/Tharak.jpg" }
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 pt-32 pb-16 px-4 animate-fadeIn">
       <div className="max-w-6xl mx-auto">
-        
-        {/* Story Section */}
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden mb-16 border border-orange-100 flex flex-col md:flex-row items-center">
           <div className="md:w-1/2 p-8 md:p-12 space-y-6">
             <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
@@ -593,7 +437,6 @@ const AboutUsPage = () => {
           </div>
         </div>
 
-        {/* Founders Grid */}
         <div className="text-center mb-12">
           <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Meet the Innovators</h2>
           <p className="text-gray-500 max-w-2xl mx-auto">The minds behind the Context-Aware Multimodal Food Safety Verification System.</p>
@@ -615,40 +458,43 @@ const AboutUsPage = () => {
             </div>
           ))}
         </div>
-
       </div>
     </div>
   );
 };
 
-// --- AUTH COMPONENTS ---
-
-const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) => {
+const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers, showToast }) => {
   const [activeTab, setActiveTab] = useState('login'); 
   const [role, setRole] = useState(USER_ROLES.DONOR);
-  const [formData, setFormData] = useState({ 
-    email: '', name: '', password: '', phone: '', 
-    isNgo: false, ngoName: '', capacityChildren: '', capacityAdults: '' 
-  });
-  const [loginError, setLoginError] = useState('');
-  const [regSuccess, setRegSuccess] = useState('');
+  const [formData, setFormData] = useState({ email: '', name: '', password: '', phone: '', isNgo: false, ngoName: '', capacityChildren: '', capacityAdults: '' });
   const [otpSent, setOtpSent] = useState(false);
   const [enteredOtp, setEnteredOtp] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [locStatus, setLocStatus] = useState('idle');
+  const [userLocation, setUserLocation] = useState(null);
+  
+  // Forgot Password specific states
   const [resetIdentifier, setResetIdentifier] = useState('');
   const [newResetPassword, setNewResetPassword] = useState('');
-  
-  // NEW: OTP Resend Timer State
-  const [resendTimer, setResendTimer] = useState(0);
-  const [userLocation, setUserLocation] = useState(null);
-  const [locStatus, setLocStatus] = useState('idle'); 
 
-  // Reset forms and states when switching tabs
-  useEffect(() => { 
-    setOtpSent(false); setEnteredOtp(''); setLoginError(''); setRegSuccess(''); 
-    setResetIdentifier(''); setNewResetPassword(''); setResendTimer(0);
-    setFormData({ email: '', name: '', password: '', phone: '', isNgo: false, ngoName: '', capacityChildren: '', capacityAdults: '' }); 
+  const SERVER_URL = 'http://3.106.48.8:5000'; 
 
+  useEffect(() => {
+    let interval;
+    if (resendTimer > 0) interval = setInterval(() => setResendTimer(p => p - 1), 1000);
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
+  useEffect(() => {
+    // Reset all states when switching tabs
+    setOtpSent(false); 
+    setEnteredOtp(''); 
+    setResendTimer(0);
+    setResetIdentifier('');
+    setNewResetPassword('');
+    setFormData({ email: '', name: '', password: '', phone: '', isNgo: false, ngoName: '', capacityChildren: '', capacityAdults: '' });
+    
     if (activeTab === 'register') {
       setLocStatus('fetching');
       if (navigator.geolocation) {
@@ -670,24 +516,15 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
     }
   }, [activeTab]);
 
-  // NEW: Resend Timer Countdown Effect
-  useEffect(() => {
-    let interval;
-    if (resendTimer > 0) {
-      interval = setInterval(() => setResendTimer((prev) => prev - 1), 1000);
-    }
-    return () => clearInterval(interval);
-  }, [resendTimer]);
-
-  const SERVER_URL = 'http://3.106.48.8:5000'; // AWS IP
-
   const handleLoginSubmit = (e) => {
-    e.preventDefault(); setLoginError('');
-    const foundUser = availableUsers.find(u => (u.email === formData.email || u.phone === formData.email) && u.password === formData.password);
-    if (foundUser) onLogin(foundUser); else setLoginError("Invalid credentials.");
+    e.preventDefault();
+    const foundUser = availableUsers.find(u => u.email === formData.email && u.password === formData.password);
+    if (foundUser) {
+      if(foundUser.suspended) return showToast("Your account has been suspended by an Admin.", "error");
+      onLogin(foundUser);
+    } else showToast("Invalid email or password", "error");
   };
 
-  // NEW: Function to handle Resending OTP from backend
   const handleResendOtp = () => {
     if (resendTimer > 0) return;
     setResendTimer(30);
@@ -700,64 +537,31 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
     })
     .then(res => res.json())
     .then(data => {
-      if (data.error) {
-        alert(data.error);
-        setResendTimer(0);
-      } else {
-        alert("A new verification code has been sent!");
-      }
+      if (data.error) { showToast(data.error, "error"); setResendTimer(0); }
+      else { showToast("A new verification code has been sent!", "success"); }
     })
-    .catch(() => {
-      alert("Network error. Could not resend OTP.");
-      setResendTimer(0);
-    });
+    .catch(() => { showToast("Network error. Could not resend OTP.", "error"); setResendTimer(0); });
   };
 
   const handleRegisterFlow = (e) => {
     e.preventDefault();
     if (!otpSent) {
-      if (!formData.name || !formData.password || !formData.phone || !formData.email) return alert("All base fields required");
-      if (role === USER_ROLES.RECEIVER && formData.isNgo && (!formData.ngoName || formData.capacityChildren === '' || formData.capacityAdults === '')) return alert("Please fill out the NGO details");
+      if (!formData.name || !formData.password || !formData.phone || !formData.email) return showToast("All base fields required", "error");
+      if (role === USER_ROLES.RECEIVER && formData.isNgo && (!formData.ngoName || formData.capacityChildren === '' || formData.capacityAdults === '')) return showToast("Please fill out the NGO details", "error");
 
       setIsVerifying(true); 
-      
-      // Request Python to send the real email
-      fetch(`${SERVER_URL}/api/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email })
-      })
+      fetch(`${SERVER_URL}/api/send-otp`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: formData.email }) })
       .then(res => res.json())
       .then(data => {
-        if (data.error) {
-          alert(data.error);
-          setIsVerifying(false);
-          return;
-        }
-        setOtpSent(true); 
-        setResendTimer(30); // Start cooldown timer automatically
-        setIsVerifying(false); 
-      })
-      .catch(() => {
-        alert("Error connecting to server to send OTP.");
-        setIsVerifying(false);
-      });
-
+        if (data.error) { showToast(data.error, "error"); setIsVerifying(false); return; }
+        setOtpSent(true); setResendTimer(30); setIsVerifying(false); 
+      }).catch(() => { showToast("Backend offline for demo. Please ensure server is running.", "error"); setIsVerifying(false); });
     } else {
-      // Verify the code the user typed against Python backend
-      fetch(`${SERVER_URL}/api/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, otp: enteredOtp })
-      })
+      fetch(`${SERVER_URL}/api/verify-otp`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: formData.email, otp: enteredOtp }) })
       .then(res => res.json())
       .then(data => {
-        if (data.error) {
-          alert("Incorrect OTP code. Please try again.");
-          return;
-        }
+        if (data.error) return showToast("Incorrect Verification Code", "error");
         
-        // Success! Create the account
         const newUser = { 
           id: Date.now(), 
           ...formData, 
@@ -769,71 +573,45 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
           role, 
           location: userLocation || { lat: 31.255, lng: 75.705 }, 
           joinedAt: new Date().toISOString(),
-          verified: true 
+          verified: true,
+          suspended: false 
         };
         onRegister(newUser);
-        setRegSuccess("Email Verified! Login now."); 
-        setOtpSent(false); 
-        setActiveTab('login');
-      })
-      .catch(() => alert("Error verifying OTP with server."));
+        showToast("Account Created Successfully!", "success");
+      });
     }
   };
 
-  // ENHANCED: Forgot Flow now uses real backend email API instead of fake timeout
   const handleForgotFlow = (e) => {
     e.preventDefault();
     if (!otpSent) {
-      if (!availableUsers.find(u => u.email === resetIdentifier || u.phone === resetIdentifier)) return setLoginError("Account not found");
+      if (!availableUsers.find(u => u.email === resetIdentifier || u.phone === resetIdentifier)) return showToast("Account not found", "error");
       setIsVerifying(true); 
       
-      // Request Python to send the reset code
-      fetch(`${SERVER_URL}/api/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: resetIdentifier })
-      })
+      fetch(`${SERVER_URL}/api/send-otp`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: resetIdentifier }) })
       .then(res => res.json())
       .then(data => {
-        if (data.error) {
-          alert(data.error);
-        } else {
-          setOtpSent(true);
-          setResendTimer(30);
-        }
+        if (data.error) { showToast(data.error, "error"); } 
+        else { setOtpSent(true); setResendTimer(30); }
         setIsVerifying(false); 
-      })
-      .catch(() => {
-        alert("Error connecting to server to send OTP.");
-        setIsVerifying(false);
-      });
+      }).catch(() => { showToast("Error connecting to server to send OTP.", "error"); setIsVerifying(false); });
     } else {
-      if (!newResetPassword) return alert("Please enter a new password");
+      if (!newResetPassword) return showToast("Please enter a new password", "error");
       
-      // Verify OTP with backend
-      fetch(`${SERVER_URL}/api/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: resetIdentifier, otp: enteredOtp })
-      })
+      fetch(`${SERVER_URL}/api/verify-otp`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: resetIdentifier, otp: enteredOtp }) })
       .then(res => res.json())
       .then(data => {
-        if (data.error) {
-          alert("Incorrect OTP code. Please try again.");
-        } else {
-          onPasswordReset(resetIdentifier, newResetPassword); 
-          setRegSuccess("Password updated securely!"); 
-          setOtpSent(false);
-          setActiveTab('login'); 
-        }
-      })
-      .catch(() => alert("Error verifying OTP with server."));
+        if (data.error) return showToast("Incorrect Verification Code", "error");
+        onPasswordReset(resetIdentifier, newResetPassword); 
+        showToast("Password updated securely!", "success"); 
+        setOtpSent(false);
+        setActiveTab('login'); 
+      }).catch(() => showToast("Error verifying OTP.", "error"));
     }
   };
 
   return (
     <div className="w-full">
-      {/* TABS */}
       {activeTab !== 'forgot' && !otpSent && (
         <div className="flex bg-gray-100 p-1 rounded-xl mb-6">
           <button className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === 'login' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setActiveTab('login')}>Login</button>
@@ -841,51 +619,41 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
         </div>
       )}
 
-      {/* FORMS */}
       {otpSent ? (
          <div className="animate-fadeIn space-y-5">
            <button onClick={() => setOtpSent(false)} className="text-sm text-gray-500 flex items-center gap-1 hover:text-gray-800"><ArrowLeft size={16}/> Back</button>
            
            <div className="bg-blue-50 p-4 rounded-xl text-center border border-blue-200">
-             <p className="text-sm text-blue-800 font-medium">We sent a secure code to</p>
-             <p className="text-md font-bold text-blue-900 mt-1">{activeTab === 'forgot' ? resetIdentifier : formData.email}</p>
+             <p className="text-sm text-blue-800">We sent a secure code to <strong>{activeTab === 'forgot' ? resetIdentifier : formData.email}</strong></p>
            </div>
            
-           <input type="text" required className="w-full border-2 border-gray-200 p-3 rounded-xl text-center text-2xl tracking-widest font-mono focus:border-orange-500 focus:outline-none" placeholder="0000" maxLength={4} value={enteredOtp} onChange={e => setEnteredOtp(e.target.value)} />
+           <input type="text" className="w-full border-2 border-gray-200 p-3 rounded-xl text-center text-2xl tracking-widest font-mono focus:border-orange-500 outline-none" placeholder="0000" maxLength={4} onChange={e => setEnteredOtp(e.target.value)} />
            
-           {activeTab === 'forgot' && <input type="password" required className="w-full border p-3 rounded-xl focus:border-orange-500 outline-none" placeholder="New Password" value={newResetPassword} onChange={e => setNewResetPassword(e.target.value)} />}
+           {activeTab === 'forgot' && <input type="password" required className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-orange-500 outline-none" placeholder="New Password" value={newResetPassword} onChange={e => setNewResetPassword(e.target.value)} />}
            
-           <button onClick={activeTab === 'forgot' ? handleForgotFlow : handleRegisterFlow} className="w-full bg-orange-600 text-white py-3.5 rounded-xl font-bold hover:bg-orange-700 shadow-lg hover:shadow-orange-500/30 transition-all transform hover:-translate-y-0.5">Verify & Continue</button>
-           
-           {/* NEW: OTP Resend Button with UI Cooldown */}
+           <button onClick={activeTab === 'forgot' ? handleForgotFlow : handleRegisterFlow} className="w-full bg-orange-600 text-white py-3.5 rounded-xl font-bold hover:bg-orange-700 transition-all">Verify & Continue</button>
+
            <div className="text-center mt-4 pt-2">
-             <button 
-               type="button" 
-               onClick={handleResendOtp}
-               disabled={resendTimer > 0}
-               className={`text-sm transition-colors font-semibold ${resendTimer > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-orange-600 hover:text-orange-800 underline'}`}
-             >
+             <button type="button" onClick={handleResendOtp} disabled={resendTimer > 0} className={`text-sm transition-colors font-bold ${resendTimer > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-orange-600 hover:text-orange-800 underline'}`}>
                {resendTimer > 0 ? `Resend Code in ${resendTimer}s` : "Didn't receive a code? Resend"}
              </button>
            </div>
          </div>
       ) : (
         <form onSubmit={activeTab === 'login' ? handleLoginSubmit : activeTab === 'forgot' ? handleForgotFlow : handleRegisterFlow} className="space-y-4">
-          {loginError && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-center gap-2"><AlertTriangle size={16}/> {loginError}</div>}
-          {regSuccess && <div className="bg-green-50 text-green-600 p-3 rounded-lg text-sm flex items-center gap-2"><CheckCircle size={16}/> {regSuccess}</div>}
-
+          
           {activeTab === 'login' && (
-             <>
+             <div className="space-y-3 animate-slideUp">
                <div className="relative group">
                  <Mail className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-orange-500 transition-colors" size={18} />
-                 <input type="text" required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none transition-all" placeholder="Email or Phone" onChange={e => setFormData({...formData, email: e.target.value})} />
+                 <input type="email" required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 outline-none transition-all" placeholder="Email Address" onChange={e => setFormData({...formData, email: e.target.value})} />
                </div>
                <div className="relative group">
                  <Lock className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-orange-500 transition-colors" size={18} />
-                 <input type="password" required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none transition-all" placeholder="Password" onChange={e => setFormData({...formData, password: e.target.value})} />
+                 <input type="password" required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 outline-none transition-all" placeholder="Password" onChange={e => setFormData({...formData, password: e.target.value})} />
                </div>
-               <div className="text-right"><button type="button" onClick={() => setActiveTab('forgot')} className="text-sm text-orange-600 font-semibold hover:underline">Forgot Password?</button></div>
-             </>
+               <div className="text-right mt-1"><button type="button" onClick={() => setActiveTab('forgot')} className="text-sm text-orange-600 font-bold hover:underline">Forgot Password?</button></div>
+             </div>
           )}
 
           {activeTab === 'register' && (
@@ -896,7 +664,6 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
               
               <div>
                 <input type="password" required className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 outline-none" placeholder="Create Password" onChange={e => setFormData({...formData, password: e.target.value})} />
-                {/* NEW: Password Strength Indicator */}
                 {formData.password && (
                   <div className="mt-2 px-1">
                     <div className="flex gap-1 h-1.5 w-full rounded-full overflow-hidden bg-gray-100">
@@ -917,12 +684,8 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
               
               <label className="block text-xs font-bold text-gray-500 uppercase mt-2">I want to...</label>
               <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: USER_ROLES.DONOR, label: 'Donor' },
-                  { id: USER_ROLES.RECEIVER, label: 'Receiver' },
-                  { id: USER_ROLES.VOLUNTEER, label: 'Volunteer' }
-                ].map((r) => (
-                  <button key={r.id} type="button" onClick={() => setRole(r.id)} className={`p-2 text-xs border rounded-lg capitalize font-medium transition-all ${role === r.id ? 'bg-orange-100 border-orange-500 text-orange-700' : 'bg-white hover:bg-gray-50'}`}>{r.label}</button>
+                {[USER_ROLES.DONOR, USER_ROLES.RECEIVER, USER_ROLES.VOLUNTEER].map((r) => (
+                  <button key={r} type="button" onClick={() => setRole(r)} className={`p-2 text-xs border rounded-lg capitalize font-bold transition-all ${role === r ? 'bg-orange-100 border-orange-500 text-orange-700' : 'bg-white hover:bg-gray-50 text-gray-500'}`}>{r}</button>
                 ))}
               </div>
 
@@ -961,8 +724,8 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
 
               <div className="flex items-center gap-2 mt-4 p-3 bg-gray-50 rounded-xl border border-gray-200">
                 {locStatus === 'fetching' && <><Activity size={16} className="animate-spin text-orange-500"/> <span className="text-sm text-gray-600">Acquiring GPS location...</span></>}
-                {locStatus === 'success' && <><MapPin size={16} className="text-green-500"/> <span className="text-sm text-green-700 font-medium">Live GPS Location Attached</span></>}
-                {locStatus === 'error' && <><AlertTriangle size={16} className="text-orange-500"/> <span className="text-sm text-orange-700">GPS Denied. Using Default Location.</span></>}
+                {locStatus === 'success' && <><MapPin size={16} className="text-green-500"/> <span className="text-sm text-green-700 font-bold">Live GPS Attached</span></>}
+                {locStatus === 'error' && <><AlertTriangle size={16} className="text-orange-500"/> <span className="text-sm text-orange-700 font-bold">GPS Denied. Default location set.</span></>}
               </div>
 
             </div>
@@ -973,11 +736,11 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
                <h3 className="text-center font-bold text-gray-800 text-lg">Reset Password</h3>
                <p className="text-center text-gray-500 text-sm">Enter your registered email to receive a secure reset code.</p>
                <input type="email" required className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 outline-none" placeholder="Registered Email Address" value={resetIdentifier} onChange={e => setResetIdentifier(e.target.value)} />
-               <button type="button" onClick={() => setActiveTab('login')} className="block mx-auto text-sm text-gray-500 hover:text-gray-800">Back to Login</button>
+               <button type="button" onClick={() => setActiveTab('login')} className="block mx-auto text-sm font-bold text-gray-500 hover:text-gray-800">Back to Login</button>
              </div>
           )}
 
-          <button disabled={isVerifying} type="submit" className="w-full bg-orange-600 text-white py-3.5 rounded-xl font-bold hover:bg-orange-700 transition-all shadow-lg hover:shadow-orange-500/30 transform hover:-translate-y-0.5 active:translate-y-0 mt-4 disabled:bg-gray-400">
+          <button disabled={isVerifying} type="submit" className="w-full bg-orange-600 text-white py-3.5 rounded-xl font-bold hover:bg-orange-700 transition-all shadow-lg mt-4 disabled:bg-gray-400 disabled:cursor-not-allowed">
             {isVerifying ? 'Connecting to Server...' : (activeTab === 'login' ? 'Sign In' : activeTab === 'forgot' ? 'Send Reset Code' : 'Create Account')}
           </button>
         </form>
@@ -986,22 +749,12 @@ const AuthScreen = ({ onLogin, onRegister, onPasswordReset, availableUsers }) =>
   );
 };
 
-const AuthPage = ({ onLogin, onRegister, onPasswordReset, availableUsers, onBack }) => (
-  <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fadeIn">
+const AuthPage = ({ onLogin, onRegister, onPasswordReset, availableUsers, onBack, showToast }) => (
+  <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 animate-fadeIn">
     <div className="sm:mx-auto sm:w-full sm:max-w-md">
-      <div className="flex justify-center mb-6">
-        <div className="bg-orange-600 p-4 rounded-2xl shadow-xl transform rotate-3 hover:rotate-0 transition-all duration-500">
-          <ShieldCheck size={48} className="text-white" />
-        </div>
-      </div>
-      <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">Welcome Back</h2>
-      <p className="mt-2 text-center text-sm text-gray-600">
-        Or <button onClick={onBack} className="font-medium text-orange-600 hover:text-orange-500">return to home page</button>
-      </p>
-    </div>
-    <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+      <h2 className="text-center text-3xl font-extrabold text-gray-900 mb-6">SharePlate Portal</h2>
       <div className="bg-white py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-gray-100">
-        <AuthScreen onLogin={onLogin} onRegister={onRegister} onPasswordReset={onPasswordReset} availableUsers={availableUsers} />
+        <AuthScreen onLogin={onLogin} onRegister={onRegister} onPasswordReset={onPasswordReset} availableUsers={availableUsers} showToast={showToast} />
       </div>
     </div>
   </div>
@@ -1009,7 +762,7 @@ const AuthPage = ({ onLogin, onRegister, onPasswordReset, availableUsers, onBack
 
 // --- APP CORE COMPONENTS ---
 
-const FoodUpload = ({ user, onUploadComplete, onBack }) => {
+const FoodUpload = ({ user, onUploadComplete, onBack, showToast }) => {
   const [step, setStep] = useState(1);
   const [image, setImage] = useState(null);
   const [video, setVideo] = useState(null);
@@ -1026,15 +779,8 @@ const FoodUpload = ({ user, onUploadComplete, onBack }) => {
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   
-  const [metadata, setMetadata] = useState({ 
-    type: FOOD_TYPES[0], 
-    quantity: 0, 
-    prepTime: 0, 
-    packaging: 'open', 
-    storage: 'room' 
-  });
+  const [metadata, setMetadata] = useState({ type: FOOD_TYPES[0], quantity: 0, prepTime: 0, packaging: 'open', storage: 'room' });
 
-  // Dynamic Servings Calculation
   const servingsAdults = metadata.quantity ? Math.floor(metadata.quantity * FOOD_SERVING_RATIOS[metadata.type].adult) : 0;
   const servingsChildren = metadata.quantity ? Math.floor(metadata.quantity * FOOD_SERVING_RATIOS[metadata.type].child) : 0;
 
@@ -1074,9 +820,10 @@ const FoodUpload = ({ user, onUploadComplete, onBack }) => {
     }
   };
   const stopRecording = () => { if (mediaRecorderRef.current && isRecording) mediaRecorderRef.current.stop(); setIsRecording(false); };
-  
-  const runAIVerification = () => {
-    if (!metadata.quantity || metadata.quantity <= 0) return alert("Please enter a valid quantity.");
+
+  const runAIVerification = (e) => {
+    e.preventDefault();
+    if (!metadata.quantity || metadata.quantity <= 0) return showToast("Please enter a valid quantity.", "error");
     setLoading(true);
     setTimeout(() => {
       let score = 100; let status = 'Safe to Donate'; let reasons = [];
@@ -1084,6 +831,7 @@ const FoodUpload = ({ user, onUploadComplete, onBack }) => {
       if (metadata.storage === 'room' && metadata.prepTime > 4) { score -= 50; reasons.push('Room temp > 4h'); }
       if (score >= 80) status = 'Safe to Donate'; else if (score >= 50) status = 'Needs Manual Verification'; else status = 'Unsafe for Redistribution';
       setAnalysis({ score, status, reasons }); setLoading(false); setStep(3);
+      showToast("AI Verification Complete", "success");
     }, 2000);
   };
 
@@ -1109,13 +857,13 @@ const FoodUpload = ({ user, onUploadComplete, onBack }) => {
               <p className="text-xs text-gray-500">{i.quantity}kg • ~{i.servingsAdults} Adults</p>
             </div>
             <div className={`px-2 py-1 rounded text-xs font-bold ${i.status.includes('Safe') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{i.score}/100</div>
-            <button onClick={()=>setBatchItems(b=>b.filter(x=>x.id!==i.id))} className="text-red-400 hover:text-red-600"><Trash2 size={18} /></button>
+            <button onClick={()=>setBatchItems(b=>b.filter(x=>x.id!==i.id))} className="text-red-400 hover:text-red-600"><Trash2 size={18}/></button>
           </div>
         ))}
       </div>
       <div className="flex gap-3">
         <button onClick={() => setShowSummary(false)} className="flex-1 py-3 rounded-xl border border-gray-300 font-bold text-gray-600 hover:bg-gray-50">Add More</button>
-        <button onClick={() => onUploadComplete(batchItems)} className="flex-1 bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 shadow-lg hover:shadow-orange-500/30">Donate All</button>
+        <button onClick={() => { onUploadComplete(batchItems); showToast("Food Listed Successfully!", "success"); }} className="flex-1 bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 shadow-lg hover:shadow-orange-500/30">Donate All</button>
       </div>
     </div>
   );
@@ -1132,7 +880,7 @@ const FoodUpload = ({ user, onUploadComplete, onBack }) => {
 
       {isCameraOpen && (
         <div className="fixed inset-0 z-50 bg-black flex flex-col animate-fadeIn">
-          <div className="flex justify-between p-6 text-white"><span className="font-bold text-lg">Camera</span><button onClick={stopCameraStream} className="p-2 bg-white/20 rounded-full"><X size={20} /></button></div>
+          <div className="flex justify-between p-6 text-white"><span className="font-bold text-lg">Camera</span><button onClick={stopCameraStream} className="p-2 bg-white/20 rounded-full"><X size={20}/></button></div>
           <div className="flex-1 relative flex items-center justify-center bg-black"><video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover"/><canvas ref={canvasRef} className="hidden"/></div>
           <div className="p-10 flex justify-center bg-black/90 backdrop-blur-sm">
             {cameraMode === 'photo' ? (
@@ -1148,7 +896,7 @@ const FoodUpload = ({ user, onUploadComplete, onBack }) => {
       <div className="p-6">
         {step === 1 && (
           <div className="space-y-4 animate-slideUp">
-            {batchItems.length > 0 && <button onClick={() => setShowSummary(true)} className="w-full bg-orange-50 text-orange-700 py-3 rounded-xl border border-orange-200 font-bold flex items-center justify-center gap-2 mb-4 hover:bg-orange-100 transition-colors"><List size={18} /> View Batch ({batchItems.length})</button>}
+            {batchItems.length > 0 && <button onClick={() => setShowSummary(true)} className="w-full bg-orange-50 text-orange-700 py-3 rounded-xl border border-orange-200 font-bold flex items-center justify-center gap-2 mb-4 hover:bg-orange-100 transition-colors"><List size={18}/> View Batch ({batchItems.length})</button>}
             <div className="grid grid-cols-2 gap-4">
               <div onClick={() => startCamera('photo')} className="border-2 border-dashed border-gray-200 p-8 text-center rounded-2xl cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition-all group">
                 <div className="bg-orange-100 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform"><Camera size={24} className="text-orange-600"/></div>
@@ -1169,10 +917,10 @@ const FoodUpload = ({ user, onUploadComplete, onBack }) => {
         )}
 
         {step === 2 && (
-          <div className="space-y-6 animate-slideUp">
+          <form onSubmit={runAIVerification} className="space-y-6 animate-slideUp">
              <div className="h-48 bg-gray-100 rounded-xl overflow-hidden shadow-inner relative group">
                 {video ? <video src={video} controls className="w-full h-full object-cover"/> : <img src={image} className="w-full h-full object-cover"/>}
-                <button onClick={()=>setStep(1)} className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X size={16} /></button>
+                <button type="button" onClick={()=>setStep(1)} className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X size={16}/></button>
              </div>
              
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1182,11 +930,11 @@ const FoodUpload = ({ user, onUploadComplete, onBack }) => {
                </div>
                <div>
                  <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Prep Time (hrs)</label>
-                 <input type="number" className="w-full border p-2.5 rounded-lg bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none" placeholder="e.g. 2" onChange={e=>setMetadata({...metadata, prepTime:e.target.value})}/>
+                 <input type="number" required className="w-full border p-2.5 rounded-lg bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none" placeholder="e.g. 2" onChange={e=>setMetadata({...metadata, prepTime:e.target.value})}/>
                </div>
                <div>
                  <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Quantity (kg/L/pieces)</label>
-                 <input type="number" step="0.5" className="w-full border p-2.5 rounded-lg bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none" placeholder="e.g. 5" onChange={e=>setMetadata({...metadata, quantity: parseFloat(e.target.value) || 0})}/>
+                 <input type="number" required step="0.5" className="w-full border p-2.5 rounded-lg bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none" placeholder="e.g. 5" onChange={e=>setMetadata({...metadata, quantity: parseFloat(e.target.value) || 0})}/>
                </div>
                <div className="bg-orange-50 border border-orange-100 rounded-lg p-3 flex flex-col justify-center shadow-sm">
                  <span className="text-[10px] font-bold text-orange-800 uppercase mb-1">Auto-Calculated Servings</span>
@@ -1196,13 +944,13 @@ const FoodUpload = ({ user, onUploadComplete, onBack }) => {
                </div>
              </div>
              <div className="flex gap-2">
-               {['hot', 'chilled', 'room'].map(s => <button key={s} onClick={()=>setMetadata({...metadata, storage:s})} className={`flex-1 py-2 text-xs font-bold rounded-lg border uppercase ${metadata.storage===s ? 'bg-blue-100 border-blue-500 text-blue-700' : 'bg-white text-gray-500'}`}>{s}</button>)}
+               {['hot', 'chilled', 'room'].map(s => <button type="button" key={s} onClick={()=>setMetadata({...metadata, storage:s})} className={`flex-1 py-2 text-xs font-bold rounded-lg border uppercase ${metadata.storage===s ? 'bg-blue-100 border-blue-500 text-blue-700' : 'bg-white text-gray-500'}`}>{s}</button>)}
              </div>
-             <button onClick={runAIVerification} disabled={loading} className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold flex justify-center gap-2 hover:bg-black transition-colors shadow-lg">
+             <button type="submit" disabled={loading} className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold flex justify-center gap-2 hover:bg-black transition-colors shadow-lg">
                {loading ? <Activity size={20} className="animate-spin text-orange-500"/> : <ShieldCheck size={20} className="text-orange-400"/>} 
                {loading ? 'Analyzing...' : 'Run Safety Check'}
              </button>
-          </div>
+          </form>
         )}
 
         {step === 3 && analysis && (
@@ -1226,206 +974,211 @@ const FoodUpload = ({ user, onUploadComplete, onBack }) => {
   );
 };
 
-// ENHANCED: Donor Dashboard now features an Environmental Impact Tracker!
 const DonorDashboard = ({ user, donations, setView }) => {
   const myDonations = donations.filter(d => d.donorId === user.id);
   const totalKg = myDonations.reduce((acc, curr) => acc + (parseFloat(curr.quantity) || 0), 0);
-  const co2Saved = (totalKg * 2.5).toFixed(1); // Avg 2.5kg CO2 saved per 1kg food waste
-  const waterSaved = (totalKg * 800).toLocaleString(); // Avg 800 Liters water to produce 1kg food
+  const co2Saved = (totalKg * 2.5).toFixed(1); 
+  const waterSaved = (totalKg * 800).toLocaleString(); 
 
   return (
     <div className="space-y-8 animate-fadeIn pb-20 max-w-7xl mx-auto px-4 mt-8">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Hello, {user.name.split(' ')[0]} 👋</h1>
-          <p className="text-gray-500 mt-1">You've successfully verified {myDonations.length} donations!</p>
+          <h1 className="text-3xl font-extrabold text-gray-900">Hello, {user.name.split(' ')[0]} 👋</h1>
+          <p className="text-gray-500 mt-1 font-medium">You've successfully verified {myDonations.length} donations.</p>
         </div>
         <button onClick={() => setView('upload')} className="bg-orange-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 shadow-lg hover:shadow-orange-500/40 hover:-translate-y-1 transition-all font-bold">
           <Plus size={20} /> New Donation
         </button>
       </div>
 
-      {/* NEW: Environmental Impact Tracker */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-2xl border border-green-200 flex items-center gap-4">
           <div className="bg-green-500 p-3 rounded-full"><Leaf className="text-white" size={24}/></div>
-          <div>
-            <p className="text-xs font-bold text-green-700 uppercase">CO₂ Prevented</p>
-            <p className="text-2xl font-black text-green-900">{co2Saved} <span className="text-sm font-medium">kg</span></p>
-          </div>
+          <div><p className="text-xs font-bold text-green-700 uppercase">CO₂ Prevented</p><p className="text-2xl font-black text-green-900">{co2Saved} <span className="text-sm font-medium">kg</span></p></div>
         </div>
         <div className="bg-gradient-to-br from-blue-50 to-cyan-100 p-6 rounded-2xl border border-blue-200 flex items-center gap-4">
           <div className="bg-blue-500 p-3 rounded-full"><Droplets className="text-white" size={24}/></div>
-          <div>
-            <p className="text-xs font-bold text-blue-700 uppercase">Water Saved</p>
-            <p className="text-2xl font-black text-blue-900">{waterSaved} <span className="text-sm font-medium">Liters</span></p>
-          </div>
+          <div><p className="text-xs font-bold text-blue-700 uppercase">Water Saved</p><p className="text-2xl font-black text-blue-900">{waterSaved} <span className="text-sm font-medium">Liters</span></p></div>
         </div>
         <div className="bg-gradient-to-br from-orange-50 to-yellow-100 p-6 rounded-2xl border border-orange-200 flex items-center gap-4">
           <div className="bg-orange-500 p-3 rounded-full"><Package className="text-white" size={24}/></div>
-          <div>
-            <p className="text-xs font-bold text-orange-700 uppercase">Food Rescued</p>
-            <p className="text-2xl font-black text-orange-900">{totalKg} <span className="text-sm font-medium">kg</span></p>
-          </div>
+          <div><p className="text-xs font-bold text-orange-700 uppercase">Food Rescued</p><p className="text-2xl font-black text-orange-900">{totalKg} <span className="text-sm font-medium">kg</span></p></div>
         </div>
       </div>
 
       <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Clock size={18} className="text-orange-500"/> Recent Activity</h3>
+        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Clock size={18} className="text-orange-500"/> Activity Log</h3>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {myDonations.map(d => (
             <div key={d.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-              <div className="h-48 bg-gray-100 relative overflow-hidden">
-                {d.mediaType==='video' ? <div className="w-full h-full flex items-center justify-center bg-gray-900"><Video size={32} className="text-white opacity-50" /></div> : <img src={d.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"/>}
-                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-gray-800 shadow-sm">{d.score} Score</div>
+              <div className="p-5 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${d.status === 'Delivered' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>{d.status}</span>
+                <span className="text-xs font-bold text-gray-500 flex items-center gap-1"><ShieldCheck size={12}/> Score: {d.score}</span>
               </div>
               <div className="p-5">
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-bold text-lg text-gray-900">{d.foodType}</h4>
-                  <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${d.claimedBy ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>{d.claimedBy ? 'Accepted' : 'Pending'}</span>
-                </div>
-                <p className="text-xs text-gray-500 mb-4">{d.quantity}kg • Serves ~{d.servingsAdults} Adults</p>
-                <div className="text-xs text-gray-400 flex items-center gap-1"><Clock size={12} /> {new Date(d.timestamp).toLocaleDateString()}</div>
+                <h4 className="font-bold text-lg text-gray-900 mb-1">{d.foodType}</h4>
+                <p className="text-xs font-medium text-gray-500 mb-4">{d.quantity}kg • Serves ~{d.servingsAdults} Adults</p>
+                <div className="text-xs text-gray-400 flex items-center gap-1"><Clock size={12} /> {new Date(d.timestamp).toLocaleString()}</div>
               </div>
             </div>
           ))}
-          {myDonations.length === 0 && (
-            <div className="col-span-full py-16 text-center border-2 border-dashed border-gray-200 rounded-2xl">
-              <p className="text-gray-400">No donations yet. Start making a difference today!</p>
-            </div>
-          )}
         </div>
       </div>
     </div>
   );
 };
 
-// ENHANCED: Added "Verified Partner" badge to NGO profile section
-const ReceiverDashboard = ({ user, donations, onAccept, users }) => {
-  const available = donations.filter(d => !d.claimedBy && d.status.includes('Safe'));
+const ReceiverDashboard = ({ user, donations, onAcceptPickup, users }) => {
+  const [tab, setTab] = useState('available');
+  const available = donations.filter(d => !d.receiverId && d.status.includes('Safe'));
+  const history = donations.filter(d => d.receiverId === user.id);
+
   return (
     <div className="space-y-8 animate-fadeIn pb-20 max-w-7xl mx-auto px-4 mt-8">
       <div className="bg-gradient-to-r from-orange-700 to-orange-500 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
         <div className="relative z-10">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">{user.name}</h1>
+            <h1 className="text-3xl font-extrabold">{user.name}</h1>
             <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 border border-white/30 shadow-sm"><ShieldCheck size={14}/> Verified Partner</span>
           </div>
-          <p className="opacity-90 mt-2">Daily Capacity: {user.capacity} Meals (Children: {user.capacityChildren || 0}, Adults: {user.capacityAdults || 0})</p>
+          <p className="opacity-90 mt-2 font-medium">Daily Target: {user.capacity} Meals (Children: {user.capacityChildren || 0}, Adults: {user.capacityAdults || 0})</p>
         </div>
         <Globe className="absolute -right-4 -bottom-4 text-white/10" size={150} />
       </div>
 
-      <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-4">Available Donations Nearby</h3>
-        <div className="grid gap-4 md:grid-cols-2">
+      <div className="flex bg-gray-200 p-1 rounded-xl mb-6 inline-flex w-full md:w-auto">
+        <button className={`flex-1 md:px-8 py-2.5 text-sm font-bold rounded-lg transition-all ${tab === 'available' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500'}`} onClick={() => setTab('available')}>Available Needs ({available.length})</button>
+        <button className={`flex-1 md:px-8 py-2.5 text-sm font-bold rounded-lg transition-all ${tab === 'history' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500'}`} onClick={() => setTab('history')}>My Received History</button>
+      </div>
+
+      {tab === 'available' && (
+        <div className="grid gap-4 md:grid-cols-2 animate-slideUp">
           {available.map(d => {
             const donor = users.find(u => u.id === d.donorId);
             return (
-              <div key={d.id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex gap-4 hover:shadow-md transition-shadow">
-                <div className="w-24 h-24 bg-gray-200 rounded-lg shrink-0 overflow-hidden">
-                  {d.mediaType==='image' && <img src={d.image} className="w-full h-full object-cover"/>}
+              <div key={d.id} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition-shadow">
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-2"><span className="text-xs font-bold text-gray-800">{donor?.name}</span><span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-bold uppercase">{donor?.type}</span></div>
+                  <h4 className="font-extrabold text-gray-900 text-xl">{d.foodType}</h4>
+                  <p className="text-sm font-medium text-gray-500 mt-1">{d.quantity}kg • Verified Safe Score: {d.score}</p>
                 </div>
-                <div className="flex-1 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-bold text-gray-800">{donor?.name}</span>
-                      <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">{donor?.type}</span>
-                    </div>
-                    <h4 className="font-bold text-gray-900">{d.foodType}</h4>
-                    <p className="text-sm text-gray-500">{d.quantity}kg • {d.distance} km</p>
-                    <p className="text-[10px] text-orange-600 font-bold mt-1 uppercase">Serves ~{d.servingsAdults} Adults / ~{d.servingsChildren} Children</p>
-                  </div>
-                  <button onClick={() => onAccept(d.id)} className="self-end bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-orange-700 transition-colors shadow-md">Accept Pickup</button>
-                </div>
+                <button onClick={() => onAcceptPickup(d.id)} className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg text-sm font-bold hover:bg-black transition-colors shadow-md">Request Volunteer Delivery</button>
               </div>
             );
           })}
-          {available.length === 0 && <div className="col-span-full text-center text-gray-400 py-10">No active donations in your area.</div>}
+          {available.length === 0 && <div className="col-span-full text-center text-gray-400 py-16 border-2 border-dashed border-gray-200 rounded-2xl">No active donations currently match your criteria.</div>}
         </div>
-      </div>
+      )}
+
+      {tab === 'history' && (
+        <div className="grid gap-4 md:grid-cols-2 animate-slideUp">
+          {history.map(d => (
+            <div key={d.id} className="bg-gray-50 border border-gray-200 p-5 rounded-xl flex justify-between items-center">
+              <div>
+                <h4 className="font-bold text-gray-900">{d.foodType} <span className="text-sm font-normal text-gray-500">({d.quantity}kg)</span></h4>
+                <p className="text-xs font-medium text-gray-500 mt-1">From: {users.find(u=>u.id === d.donorId)?.name}</p>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${d.status === 'Delivered' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{d.status}</span>
+            </div>
+          ))}
+          {history.length === 0 && <div className="col-span-full text-center text-gray-400 py-16 border-2 border-dashed border-gray-200 rounded-2xl">You have not claimed any donations yet.</div>}
+        </div>
+      )}
     </div>
   );
 };
 
-const VolunteerDashboard = ({ user, donations, users, onUpdateStatus }) => {
-  const [active, setActive] = useState(null);
-  const [progress, setProgress] = useState(0);
-  const tasks = donations.filter(d => d.claimedBy && !d.delivered);
-
-  useEffect(() => {
-    let interval;
-    if (active && progress < 100) { interval = setInterval(() => setProgress(p => p+1), 200); }
-    return () => clearInterval(interval);
-  }, [active, progress]);
-
-  if (active) return (
-    <div className="max-w-3xl mx-auto px-4 mt-8">
-      <div className="bg-white rounded-2xl shadow-xl p-6 border border-orange-100 animate-slideUp">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-3">
-            <span className="relative flex h-3 w-3"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span></span>
-            <span className="font-bold text-gray-800">Live Navigation</span>
-          </div>
-          <button onClick={()=>{setActive(null); setProgress(0);}} className="p-2 hover:bg-gray-100 rounded-full"><X size={20} /></button>
-        </div>
-        
-        <div className="flex justify-between text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">
-          <span>Pickup</span>
-          <span>Dropoff</span>
-        </div>
-        <div className="relative h-3 bg-gray-100 rounded-full mb-8 overflow-hidden">
-          <div className="absolute top-0 left-0 h-full bg-orange-500 transition-all duration-200 ease-linear" style={{width: `${progress}%`}}/>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-gray-50 p-4 rounded-xl">
-            <p className="text-xs text-gray-400 uppercase font-bold">From</p>
-            <p className="font-bold text-gray-800">{users.find(u=>u.id===active.donorId)?.name}</p>
-          </div>
-          <div className="bg-orange-50 p-4 rounded-xl">
-            <p className="text-xs text-orange-400 uppercase font-bold">To</p>
-            <p className="font-bold text-orange-800">{users.find(u=>u.id===active.claimedBy)?.name}</p>
-          </div>
-        </div>
-
-        <button onClick={()=>{onUpdateStatus(active.id, 'delivered'); setActive(null); alert("Delivery Completed!");}} disabled={progress<100} className="w-full py-4 rounded-xl font-bold text-white shadow-lg transition-all transform hover:scale-[1.02] bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed">
-          {progress < 100 ? 'Navigating...' : 'Confirm Delivery'}
-        </button>
-      </div>
-    </div>
-  );
+const VolunteerDashboard = ({ user, donations, users, onAcceptTask, onVolunteerAction }) => {
+  const [activeTab, setActiveTab] = useState('available');
+  
+  const availableTasks = donations.filter(d => d.receiverId && !d.volunteerId && !d.delivered && d.status !== 'Removed by Admin');
+  const myActiveTasks = donations.filter(d => d.volunteerId === user.id && !d.delivered);
+  const completedTasks = donations.filter(d => d.volunteerId === user.id && d.delivered).length;
 
   return (
-    <div className="space-y-6 animate-fadeIn max-w-7xl mx-auto px-4 mt-8">
-      <h1 className="text-2xl font-bold flex items-center gap-2"><Bike className="text-orange-600"/> Delivery Tasks</h1>
-      <div className="grid gap-4">
-        {tasks.map(t => (
-          <div key={t.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-md transition-shadow">
-            <div>
-              <h3 className="font-bold text-lg text-gray-900">{t.foodType}</h3>
-              <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-                <MapPin size={14} className="text-gray-400"/>
-                <span>{users.find(u=>u.id===t.donorId)?.name}</span>
-                <ArrowRight size={14} className="text-gray-300"/>
-                <span>{users.find(u=>u.id===t.claimedBy)?.name}</span>
-              </div>
-            </div>
-            <button onClick={() => {setActive(t); setProgress(0);}} className="bg-orange-600 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow hover:bg-orange-700 transition-colors">Start</button>
-          </div>
-        ))}
-        {tasks.length === 0 && <div className="text-center py-12 text-gray-400 bg-white rounded-xl border border-dashed">No pending deliveries.</div>}
+    <div className="space-y-6 animate-fadeIn max-w-7xl mx-auto px-4 mt-8 pb-20">
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+          <div className="bg-blue-100 p-3 rounded-full"><Award className="text-blue-600" size={24}/></div>
+          <div><p className="text-xs font-bold text-gray-500 uppercase">Deliveries</p><p className="text-2xl font-black text-gray-900">{completedTasks}</p></div>
+        </div>
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+          <div className="bg-green-100 p-3 rounded-full"><Activity className="text-green-600" size={24}/></div>
+          <div><p className="text-xs font-bold text-gray-500 uppercase">Impact Rating</p><p className="text-2xl font-black text-gray-900">{completedTasks * 50}</p></div>
+        </div>
       </div>
+
+      <div className="flex bg-gray-200 p-1 rounded-xl mb-6 inline-flex w-full md:w-auto">
+        <button className={`flex-1 md:px-8 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === 'available' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500'}`} onClick={() => setActiveTab('available')}>Job Board ({availableTasks.length})</button>
+        <button className={`flex-1 md:px-8 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === 'active' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500'}`} onClick={() => setActiveTab('active')}>Active Routes ({myActiveTasks.length})</button>
+      </div>
+
+      {activeTab === 'available' && (
+        <div className="grid gap-4 md:grid-cols-2 animate-slideUp">
+          {availableTasks.map(t => (
+            <div key={t.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow relative overflow-hidden">
+              <h3 className="font-bold text-lg text-gray-900 mb-3 mt-2">{t.foodType} <span className="text-sm font-normal text-gray-500">({t.quantity}kg)</span></h3>
+              <div className="flex flex-col gap-2 mb-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <div className="flex items-center gap-2 text-sm text-gray-700">
+                  <MapPin size={16} className="text-orange-500 min-w-max"/> 
+                  <span className="font-bold text-gray-900 w-16">Pickup:</span> <span className="truncate">{users.find(u=>u.id===t.donorId)?.name}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-700">
+                  <Truck size={16} className="text-green-500 min-w-max"/> 
+                  <span className="font-bold text-gray-900 w-16">Dropoff:</span> <span className="truncate">{users.find(u=>u.id===t.receiverId)?.name}</span>
+                </div>
+              </div>
+              <button onClick={() => onAcceptTask(t.id)} className="w-full bg-gray-900 text-white px-5 py-3 rounded-lg font-bold shadow hover:bg-black transition-colors">Accept Delivery Route</button>
+            </div>
+          ))}
+          {availableTasks.length === 0 && <div className="col-span-full text-center py-16 text-gray-500 bg-white rounded-xl border border-dashed border-gray-300 font-medium">No delivery requests currently open.</div>}
+        </div>
+      )}
+
+      {activeTab === 'active' && (
+        <div className="grid gap-4 md:grid-cols-2 animate-slideUp">
+          {myActiveTasks.map(t => (
+            <div key={t.id} className="bg-orange-50 border border-orange-200 p-5 rounded-xl shadow-sm">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="font-bold text-lg text-gray-900">{t.foodType}</h3>
+                  <p className="text-xs text-orange-800 font-bold mt-1 uppercase tracking-wide">Status: {t.status}</p>
+                </div>
+                <div className="bg-white p-2 rounded-lg border border-orange-100 flex items-center gap-2 shadow-sm text-xs font-bold text-gray-600">
+                  <span className={t.pickedUp ? "text-green-500" : "text-gray-300"}><CheckCircle size={14}/></span> Picked Up
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-2 mb-5">
+                <div className={`flex items-center gap-2 text-sm ${!t.pickedUp ? 'text-gray-900 font-bold' : 'text-gray-400 line-through'}`}>
+                   1. {users.find(u=>u.id===t.donorId)?.name}
+                </div>
+                <div className={`flex items-center gap-2 text-sm ${t.pickedUp ? 'text-gray-900 font-bold' : 'text-gray-400'}`}>
+                   2. {users.find(u=>u.id===t.receiverId)?.name}
+                </div>
+              </div>
+
+              {!t.pickedUp ? (
+                <button onClick={() => onVolunteerAction(t.id, 'pickup')} className="w-full bg-orange-600 text-white px-5 py-3 rounded-lg font-bold shadow hover:bg-orange-700 transition-colors">Confirm Pickup at Donor</button>
+              ) : (
+                <button onClick={() => onVolunteerAction(t.id, 'deliver')} className="w-full bg-green-600 text-white px-5 py-3 rounded-lg font-bold shadow hover:bg-green-700 transition-colors">Confirm Dropoff at NGO</button>
+              )}
+            </div>
+          ))}
+          {myActiveTasks.length === 0 && <div className="col-span-full text-center py-16 text-gray-500 bg-white rounded-xl border border-dashed border-gray-300 font-medium">You have no active deliveries. Head to the Job Board!</div>}
+        </div>
+      )}
     </div>
   );
 };
 
-const AdminDashboard = ({ users, donations }) => {
+const AdminDashboard = ({ users, donations, onAdminAction }) => {
   const [adminTab, setAdminTab] = useState('overview'); 
 
   const stats = {
     totalFood: donations.reduce((acc, curr) => acc + parseInt(curr.quantity || 0), 0),
-    safeRate: donations.length ? Math.round((donations.filter(d => d.status.includes('Safe')).length / donations.length) * 100) : 0,
+    safeRate: donations.length ? Math.round((donations.filter(d => d.status.includes('Safe') || d.score >= 70).length / donations.length) * 100) : 0,
     activeUsers: users.length,
     completedDeliveries: donations.filter(d => d.delivered).length
   };
@@ -1434,23 +1187,18 @@ const AdminDashboard = ({ users, donations }) => {
 
   return (
     <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto px-4 mt-8 pb-20">
-      <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-6 border-b pb-4">
+      <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-6 border-b border-gray-200 pb-4">
         <div>
           <h1 className="text-3xl font-extrabold text-gray-900 flex items-center gap-2"><ShieldCheck className="text-orange-600"/> Master Admin Control</h1>
-          <p className="text-gray-500 mt-1 text-sm">Full visibility and control over all platform data.</p>
+          <p className="text-gray-500 mt-1 text-sm font-medium">Full visibility and enforcement over platform operations.</p>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
           {[
             { id: 'overview', label: 'Overview', icon: BarChart3 },
-            { id: 'users', label: 'Users Mgmt', icon: Users },
-            { id: 'donations', label: 'Donations', icon: Database },
-            { id: 'deliveries', label: 'Logistics', icon: Truck }
+            { id: 'users', label: 'User Directory', icon: Users },
+            { id: 'donations', label: 'Network Donations', icon: Database },
           ].map(tab => (
-            <button 
-              key={tab.id}
-              onClick={() => setAdminTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all ${adminTab === tab.id ? 'bg-orange-600 text-white shadow-md' : 'bg-white text-gray-600 hover:bg-orange-50 border border-gray-200'}`}
-            >
+            <button key={tab.id} onClick={() => setAdminTab(tab.id)} className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap ${adminTab === tab.id ? 'bg-gray-900 text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}>
               <tab.icon size={16} /> {tab.label}
             </button>
           ))}
@@ -1460,20 +1208,20 @@ const AdminDashboard = ({ users, donations }) => {
       {adminTab === 'overview' && (
         <div className="animate-slideUp space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-orange-500">
-              <h3 className="text-gray-500 font-medium mb-1 text-sm uppercase tracking-wide">Total Rescued</h3>
-              <p className="text-4xl font-black text-gray-900">{stats.totalFood} <span className="text-lg font-normal text-gray-400">kg</span></p>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-t-4 border-t-orange-500">
+              <h3 className="text-gray-500 font-bold mb-1 text-xs uppercase tracking-wide">Total Rescued</h3>
+              <p className="text-4xl font-black text-gray-900">{stats.totalFood} <span className="text-lg font-bold text-gray-400">kg</span></p>
             </div>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-blue-500">
-              <h3 className="text-gray-500 font-medium mb-1 text-sm uppercase tracking-wide">Network Size</h3>
-              <p className="text-4xl font-black text-gray-900">{stats.activeUsers} <span className="text-lg font-normal text-gray-400">Users</span></p>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-t-4 border-t-blue-500">
+              <h3 className="text-gray-500 font-bold mb-1 text-xs uppercase tracking-wide">Network Size</h3>
+              <p className="text-4xl font-black text-gray-900">{stats.activeUsers} <span className="text-lg font-bold text-gray-400">Users</span></p>
             </div>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-green-500">
-              <h3 className="text-gray-500 font-medium mb-1 text-sm uppercase tracking-wide">Safety Pass Rate</h3>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-t-4 border-t-green-500">
+              <h3 className="text-gray-500 font-bold mb-1 text-xs uppercase tracking-wide">Safety Pass Rate</h3>
               <p className="text-4xl font-black text-gray-900">{stats.safeRate}%</p>
             </div>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-purple-500">
-              <h3 className="text-gray-500 font-medium mb-1 text-sm uppercase tracking-wide">Deliveries Done</h3>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-t-4 border-t-purple-500">
+              <h3 className="text-gray-500 font-bold mb-1 text-xs uppercase tracking-wide">Deliveries Done</h3>
               <p className="text-4xl font-black text-gray-900">{stats.completedDeliveries}</p>
             </div>
           </div>
@@ -1485,31 +1233,34 @@ const AdminDashboard = ({ users, donations }) => {
           <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                  <th className="p-4 font-bold border-b">ID</th>
-                  <th className="p-4 font-bold border-b">Name</th>
-                  <th className="p-4 font-bold border-b">Role</th>
-                  <th className="p-4 font-bold border-b">Contact Info</th>
-                  <th className="p-4 font-bold border-b">Joined Date</th>
-                  <th className="p-4 font-bold border-b text-center">Status</th>
+                <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
+                  <th className="p-4 font-bold">User / Role</th>
+                  <th className="p-4 font-bold">Contact Info</th>
+                  <th className="p-4 font-bold">Joined Date</th>
+                  <th className="p-4 font-bold text-center">Status</th>
+                  <th className="p-4 font-bold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {users.map(u => (
-                  <tr key={u.id} className="hover:bg-orange-50/30 transition-colors">
-                    <td className="p-4 text-sm text-gray-500 font-mono">#{u.id.toString().slice(-4)}</td>
-                    <td className="p-4 text-sm font-bold text-gray-800">{u.name}</td>
-                    <td className="p-4 text-sm"><span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs uppercase font-bold">{u.role}</span></td>
-                    <td className="p-4 text-sm text-gray-600">
-                      <div>{u.email}</div>
-                      <div className="text-xs text-gray-400">{u.phone}</div>
+                  <tr key={u.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="p-4">
+                      <div className="font-bold text-gray-900">{u.name}</div>
+                      <div className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded uppercase font-bold w-max mt-1">{u.role}</div>
                     </td>
-                    <td className="p-4 text-sm text-gray-600">
-                      <div>{u.joinedAt ? new Date(u.joinedAt).toLocaleDateString() : 'N/A'}</div>
-                      <div className="text-xs text-gray-400">{u.joinedAt ? new Date(u.joinedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}</div>
-                    </td>
+                    <td className="p-4 text-sm text-gray-600"><div>{u.email}</div><div className="text-xs text-gray-400">{u.phone}</div></td>
+                    <td className="p-4 text-sm text-gray-600"><div>{u.joinedAt ? new Date(u.joinedAt).toLocaleDateString() : 'N/A'}</div></td>
                     <td className="p-4 text-center">
-                      <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold">Active</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${u.suspended ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                        {u.suspended ? 'Suspended' : 'Active'}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right">
+                      {u.role !== USER_ROLES.ADMIN && (
+                        <button onClick={() => onAdminAction('toggleSuspend', u.id)} className={`text-xs font-bold px-3 py-1.5 rounded border transition-colors ${u.suspended ? 'text-green-600 border-green-200 hover:bg-green-50' : 'text-red-600 border-red-200 hover:bg-red-50'}`}>
+                          {u.suspended ? 'Unsuspend' : 'Suspend'}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -1524,83 +1275,40 @@ const AdminDashboard = ({ users, donations }) => {
           <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                  <th className="p-4 font-bold border-b">Food Item</th>
-                  <th className="p-4 font-bold border-b">Donor</th>
-                  <th className="p-4 font-bold border-b">Qty & Pack</th>
-                  <th className="p-4 font-bold border-b">Score</th>
-                  <th className="p-4 font-bold border-b">Status</th>
+                <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
+                  <th className="p-4 font-bold">Donation Details</th>
+                  <th className="p-4 font-bold">Donor</th>
+                  <th className="p-4 font-bold">Status</th>
+                  <th className="p-4 font-bold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {donations.map(d => (
-                  <tr key={d.id} className="hover:bg-orange-50/30 transition-colors">
-                    <td className="p-4 text-sm font-bold text-gray-800 flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden shrink-0">
-                        {d.mediaType === 'video' ? <Video className="m-2 text-gray-400" size={24} /> : <img src={d.image} className="w-full h-full object-cover"/>}
-                      </div>
-                      <div>
-                        <div>{d.foodType}</div>
-                        <div className="text-[10px] text-gray-400 font-normal">Serves ~{d.servingsAdults}A / ~{d.servingsChildren}C</div>
-                      </div>
-                    </td>
-                    <td className="p-4 text-sm text-gray-600">{getUserName(d.donorId)}</td>
-                    <td className="p-4 text-sm text-gray-600">
-                      <div>{d.quantity} kg</div>
-                      <div className="text-xs text-gray-400 capitalize">{d.packaging}</div>
-                    </td>
+                  <tr key={d.id} className="hover:bg-gray-50 transition-colors">
                     <td className="p-4">
-                      <div className="flex items-center gap-1">
-                        <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="font-bold text-gray-900">{d.foodType} <span className="text-sm font-normal text-gray-500">({d.quantity}kg)</span></div>
+                      <div className="flex items-center gap-1 mt-1">
+                        <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                           <div className={`h-full ${d.score >= 80 ? 'bg-green-500' : d.score >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{width: `${d.score}%`}}></div>
                         </div>
-                        <span className="text-xs font-bold text-gray-600">{d.score}</span>
+                        <span className="text-[10px] font-bold text-gray-500">Score: {d.score}</span>
                       </div>
                     </td>
+                    <td className="p-4 text-sm font-medium text-gray-600">{getUserName(d.donorId)}</td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${d.status.includes('Safe') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${d.status.includes('Safe') || d.status === 'Delivered' ? 'bg-green-100 text-green-700' : d.status === 'Removed by Admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
                         {d.status}
                       </span>
                     </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {adminTab === 'deliveries' && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden animate-slideUp">
-          <div className="overflow-x-auto custom-scrollbar">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                  <th className="p-4 font-bold border-b">Item</th>
-                  <th className="p-4 font-bold border-b">Route (Donor → NGO)</th>
-                  <th className="p-4 font-bold border-b">Logistics Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {donations.filter(d => d.claimedBy).length > 0 ? donations.filter(d => d.claimedBy).map(d => (
-                  <tr key={d.id} className="hover:bg-orange-50/30 transition-colors">
-                    <td className="p-4 text-sm font-bold text-gray-800">{d.foodType} ({d.quantity}kg)</td>
-                    <td className="p-4 text-sm text-gray-600 flex items-center gap-2">
-                      <span className="font-medium">{getUserName(d.donorId)}</span>
-                      <ArrowRight size={14} className="text-gray-300"/>
-                      <span className="font-medium text-orange-700">{getUserName(d.claimedBy)}</span>
-                    </td>
-                    <td className="p-4">
-                      {d.delivered ? (
-                         <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold flex items-center w-max gap-1"><CheckCircle size={12} /> Delivered</span>
-                      ) : (
-                         <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold flex items-center w-max gap-1"><Truck size={12} /> Pending / Transit</span>
+                    <td className="p-4 text-right">
+                      {d.status !== 'Removed by Admin' && d.status !== 'Delivered' && (
+                        <button onClick={() => onAdminAction('removeDonation', d.id)} className="text-xs font-bold px-3 py-1.5 rounded border border-red-200 text-red-600 hover:bg-red-50 transition-colors">
+                          Force Remove
+                        </button>
                       )}
                     </td>
                   </tr>
-                )) : (
-                  <tr><td colSpan="3" className="p-8 text-center text-gray-400">No active or completed logistics found.</td></tr>
-                )}
+                ))}
               </tbody>
             </table>
           </div>
@@ -1615,86 +1323,105 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [view, setView] = useState('landing'); 
   const [donations, setDonations] = useState([]); 
-  const [users, setUsers] = useState(INITIAL_USERS.map((u, index) => ({
-    ...u,
-    joinedAt: new Date(Date.now() - index * 86400000 * 2).toISOString() 
+  const [toast, setToast] = useState(null);
+
+  const [users, setUsers] = useState(() => INITIAL_USERS.map((u, index) => ({
+    ...u, joinedAt: new Date(Date.now() - index * 86400000 * 2).toISOString() 
   })));
 
-  // Put your actual AWS IP Address here! (e.g., 'http://54.12.34.56:5000')
+  // Your AWS Cloud IP
   const SERVER_URL = 'http://3.106.48.8:5000';
 
+  const showToast = (message, type = 'success') => setToast({ message, type });
+
   useEffect(() => {
-    // 1. Fetch Global Donations
-    fetch(`${SERVER_URL}/api/donations`)
-      .then(response => response.json())
+    fetch(`${SERVER_URL}/api/donations`).then(res => res.json())
       .then(data => setDonations(data.length > 0 ? data : INITIAL_DONATIONS))
       .catch(() => setDonations(INITIAL_DONATIONS));
-
-    // 2. Fetch Global Users
-    fetch(`${SERVER_URL}/api/users`)
-      .then(response => response.json())
-      .then(data => {
-         if (data.length > 0) {
-             setUsers(prev => [...prev, ...data]); // Combine local and cloud users
-         }
-      })
-      .catch(err => console.log("Backend offline, using local users."));
+    fetch(`${SERVER_URL}/api/users`).then(res => res.json())
+      .then(data => { if (data.length > 0) setUsers(prev => [...prev, ...data]); })
+      .catch(() => console.log("Backend offline, using local users."));
   }, []);
 
-  const handleLogin = (u) => { setUser(u); setView('dashboard'); };
+  const handleLogin = (u) => { setUser(u); setView('dashboard'); showToast(`Welcome back, ${u.name}!`, "success"); };
   
-  // Send NEW Users to the Cloud Server
   const handleRegister = (u) => { 
-    fetch(`${SERVER_URL}/api/users`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(u)
-    })
-    .then(response => response.json())
-    .then(savedUser => {
-      setUsers([...users, savedUser]); // Save successful cloud user
-    })
-    .catch(error => {
-      setUsers([...users, u]); // Fallback if cloud fails
-    });
+    fetch(`${SERVER_URL}/api/users`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(u) })
+    .then(res => res.json()).then(savedUser => setUsers([...users, savedUser])).catch(() => setUsers([...users, u]));
   };
   
-  // Send NEW Donations to the Cloud Server
   const handleUpload = (items) => { 
     const arr = Array.isArray(items) ? items : [items]; 
     arr.forEach(item => {
-      fetch(`${SERVER_URL}/api/donations`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(item)
-      })
-      .then(response => response.json())
-      .then(savedItem => setDonations(prev => [savedItem, ...prev]))
+      fetch(`${SERVER_URL}/api/donations`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) })
+      .then(res => res.json()).then(savedItem => setDonations(prev => [savedItem, ...prev]))
       .catch(() => setDonations(prev => [{...item, id: Date.now()}, ...prev]));
     });
     setView('dashboard'); 
   };
 
-  const handleUpdate = (id, status) => setDonations(d => d.map(i => i.id===id ? {...i, [status]:true} : i));
-  const handleAccept = (id) => setDonations(d => d.map(i => i.id===id ? {...i, claimedBy: user.id} : i));
+  const updateDonationInCloud = (id, updates) => {
+    fetch(`${SERVER_URL}/api/donations/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) })
+    .catch(() => console.log("Demo mode, cloud sync skipped"));
+  };
+
+  const handleAcceptPickup = (id) => {
+    setDonations(d => d.map(i => i.id === id ? { ...i, claimedBy: user.id, receiverId: user.id, status: 'Awaiting Volunteer' } : i));
+    updateDonationInCloud(id, { claimedBy: user.id, receiverId: user.id, status: 'Awaiting Volunteer' });
+    showToast("Donation Claimed! Alert sent to volunteers.", "success");
+  };
+
+  const handleAcceptTask = (id) => {
+    setDonations(d => d.map(i => i.id === id ? { ...i, volunteerId: user.id, status: 'Driver Assigned' } : i));
+    updateDonationInCloud(id, { volunteerId: user.id, status: 'Driver Assigned' });
+    showToast("Route Accepted! Drive safely.", "success");
+  };
+
+  const handleVolunteerAction = (id, action) => {
+    if (action === 'pickup') {
+      setDonations(d => d.map(i => i.id === id ? { ...i, pickedUp: true, status: 'In Transit' } : i));
+      updateDonationInCloud(id, { pickedUp: true, status: 'In Transit' });
+      showToast("Picked up from Donor!", "success");
+    } else if (action === 'deliver') {
+      setDonations(d => d.map(i => i.id === id ? { ...i, delivered: true, status: 'Delivered' } : i));
+      updateDonationInCloud(id, { delivered: true, status: 'Delivered' });
+      showToast("Delivery complete. Impact added!", "success");
+    }
+  };
+
+  const handleAdminAction = (action, id) => {
+    if (action === 'toggleSuspend') {
+      setUsers(u => u.map(x => x.id === id ? { ...x, suspended: !x.suspended } : x));
+      showToast("User account status updated.", "success");
+    } else if (action === 'removeDonation') {
+      setDonations(d => d.map(i => i.id === id ? { ...i, status: 'Removed by Admin' } : i));
+      updateDonationInCloud(id, { status: 'Removed by Admin' });
+      showToast("Donation forcefully removed from network.", "error");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900 flex flex-col">
       <GlobalStyles />
-      <Navbar user={user} onLogout={()=>{setUser(null); setView('landing');}} setView={setView} onLoginClick={() => setView('auth')} />
+      <ToastNotification toast={toast} onClose={() => setToast(null)} />
+      <Navbar user={user} onLogout={()=>{setUser(null); setView('landing'); showToast("Logged out successfully.", "success");}} setView={setView} onLoginClick={() => setView('auth')} />
       <main className="flex-grow pt-16">
         {view === 'landing' && <LandingPage onGetStarted={() => setView('auth')} onLearnMore={() => setView('howItWorks')} availableUsers={users} />}
         {view === 'howItWorks' && <HowItWorksPage onGetStarted={() => setView('auth')} />}
         {view === 'aboutUs' && <AboutUsPage />}
-        {view === 'auth' && <AuthPage onLogin={handleLogin} onRegister={handleRegister} onPasswordReset={()=>{}} availableUsers={users} onBack={() => setView('landing')} />}
+        {view === 'auth' && <AuthPage onLogin={handleLogin} onRegister={handleRegister} onPasswordReset={()=>{}} availableUsers={users} onBack={() => setView('landing')} showToast={showToast} />}
+        
         {view === 'dashboard' && user?.role === USER_ROLES.DONOR && <DonorDashboard user={user} donations={donations} setView={setView} />}
-        {view === 'upload' && user?.role === USER_ROLES.DONOR && <FoodUpload user={user} onUploadComplete={handleUpload} onBack={() => setView('dashboard')} />}
-        {view === 'dashboard' && user?.role === USER_ROLES.RECEIVER && <ReceiverDashboard user={user} donations={donations} onAccept={handleAccept} users={users} />}
-        {view === 'dashboard' && user?.role === USER_ROLES.VOLUNTEER && <VolunteerDashboard user={user} donations={donations} users={users} onUpdateStatus={handleUpdate} />}
-        {view === 'dashboard' && user?.role === USER_ROLES.ADMIN && <AdminDashboard users={users} donations={donations} />}
+        {view === 'upload' && user?.role === USER_ROLES.DONOR && <FoodUpload user={user} onUploadComplete={handleUpload} onBack={() => setView('dashboard')} showToast={showToast} />}
+        
+        {view === 'dashboard' && user?.role === USER_ROLES.RECEIVER && <ReceiverDashboard user={user} donations={donations} onAcceptPickup={handleAcceptPickup} users={users} showToast={showToast} />}
+        
+        {view === 'dashboard' && user?.role === USER_ROLES.VOLUNTEER && <VolunteerDashboard user={user} donations={donations} users={users} onAcceptTask={handleAcceptTask} onVolunteerAction={handleVolunteerAction} />}
+        
+        {view === 'dashboard' && user?.role === USER_ROLES.ADMIN && <AdminDashboard users={users} donations={donations} onAdminAction={handleAdminAction} showToast={showToast} />}
       </main>
-      <footer className="bg-white border-t border-gray-100 py-8 mt-auto text-center text-sm text-gray-400">
-        <p>© 2026 SharePlate. All rights reserved.</p>
+      <footer className="bg-white border-t border-gray-100 py-8 mt-auto text-center text-sm text-gray-400 font-medium">
+        <p>© 2026 SharePlate Enterprise Capstone. All rights reserved.</p>
       </footer>
     </div>
   );
